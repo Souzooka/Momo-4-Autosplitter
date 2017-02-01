@@ -5,6 +5,8 @@ state("MomodoraRUtM", "unknownPatch")
 
  	// Edea split
  	double edeaHP : 0x230D0EC, 0x0, 0x4, 0x230;
+ 	double edeaHPMax : 0x230D0EC, 0x0, 0x4, 0x240;
+ 	
 }
 
 start
@@ -14,9 +16,10 @@ start
 	}
 }
 
+
 split
 {
-	if (old.edeaHP > 11 && current.edeaHP <= 11) {
+	if (old.edeaHP > 11 && current.edeaHPMax == 80 && current.edeaHP <= 11) {
 		return true;
 	}
 }
