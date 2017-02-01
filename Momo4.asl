@@ -4,7 +4,7 @@ state("MomodoraRUtM", "unknownPatch")
  	double difficultySelector : 0x22C17DC, 0xCB4, 0xC, 0x4, 0x41B0;
 
  	// Not sure if this is for every boss
- 	double bossHP : 0x22E92B0;
+ 	double bossHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
 }
 
 start
