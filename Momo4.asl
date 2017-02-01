@@ -16,7 +16,7 @@ start
 
 split
 {
-	if (old.bossHP > 11 && current.bossHP == 11) {
+	if (old.bossHP > 11 && current.bossHP <= 11) {
 		return true;
 	}
 }
