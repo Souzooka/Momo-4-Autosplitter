@@ -5,6 +5,7 @@ state("MomodoraRUtM", "v1.04d")
 
  	// For reset
  	double inGame : 0x230DB60, 0x78, 0x414, 0x5C0;
+ 	double characterHP : 0x230DB60, 0x78, 0x414, 0x0;
 
  	// Edea split
  	double edeaHP : 0x230D0EC, 0x4, 0x140, 0x4, 0x230;
@@ -39,7 +40,7 @@ start
 
 reset
 {
-	if (current.inGame == 0 && old.inGame == 1) {
+	if (current.inGame == 0 && old.inGame == 1 && current.characterHP == 30) {
 		print("reset returned true!");
 		return true;
 	}
@@ -56,7 +57,7 @@ split
 		print("Edea defeated!");
 		return true;
 	}
-	// Lubella
+	// Lubella, NOTE: Phase 1 is 130 max HP and phase 2 is 150 max HP, use this for settings!
 	if (old.lubellaHP > 11 && current.lubellaHPMax != 0 && current.lubellaHP <= 11) {
 		print("Lubella defeated!");
 		return true;
