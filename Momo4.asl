@@ -1,4 +1,4 @@
-state("MomodoraRUtM", "unknownPatch")
+state("MomodoraRUtM", "v1.04d")
 {
 	// For start
  	double difficultySelector : 0x22C17DC, 0xCB4, 0xC, 0x4, 0x41B0;
@@ -13,6 +13,16 @@ state("MomodoraRUtM", "unknownPatch")
  	// Lubella split
  	double lubellaHP : 0x230D0EC, 0x8, 0x140, 0x4, 0x230;
  	double lubellaHPMax : 0x230D0EC, 0x8, 0x140, 0x4, 0x240;
+}
+
+init
+{
+	// Debug
+	print("modules.First().ModuleMemorySize == " + "0x" + modules.First().ModuleMemorySize.ToString("X8"));
+
+	if (modules.First().ModuleMemorySize == 0x25D6000) {
+		version = "v1.04d";
+	}
 }
 
 start
