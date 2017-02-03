@@ -19,6 +19,11 @@ state("MomodoraRUtM", "v1.04d")
  	double fridaHP : 0x230D0EC, 0x34, 0x13C, 0x4, 0x230;
  	double fridaHPMax : 0x230D0EC, 0x34, 0x13C, 0x4, 0x240;
 
+ 	// Arsonist split ------- realllllly fickle
+/* 	double arsonistHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
+ 	double arsonistHPMax : 0x22FE9E4, 0x0, 0x0, 0x4, 0x240;*/
+ 	double arsonistDefeated : 0x230D270, 0x880, 0x108, 0x9E0;
+
  	// Warpstone
  	double warpStone : 0x230DB28, 0x2C, 0xE44, 0x4, 0x5C0;
 }
@@ -67,6 +72,11 @@ split
 	// Frida
 	if (old.fridaHP > 11 && current.fridaHPMax != 0 && current.fridaHP <= 11) {
 		print("Frida defeated!");
+		return true;
+	}
+	// Arsonist
+	if (old.arsonistDefeated == 0 && current.arsonistDefeated == 1) {
+		print("Arsonist defeated!");
 		return true;
 	}
 	// Warpstone
