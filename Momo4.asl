@@ -15,9 +15,12 @@ state("MomodoraRUtM", "v1.04d")
  	double lubellaHP : 0x230D0EC, 0x8, 0x140, 0x4, 0x230;
  	double lubellaHPMax : 0x230D0EC, 0x8, 0x140, 0x4, 0x240;
 
- 	// frida split
+ 	// Frida split
  	double fridaHP : 0x230D0EC, 0x34, 0x13C, 0x4, 0x230;
  	double fridaHPMax : 0x230D0EC, 0x34, 0x13C, 0x4, 0x240;
+
+ 	// Warpstone
+ 	double warpStone : 0x230DB28, 0x2C, 0xE44, 0x4, 0x5C0;
 }
 
 init
@@ -46,7 +49,6 @@ reset
 	}
 }
 
-
 split
 {
 
@@ -65,6 +67,11 @@ split
 	// Frida
 	if (old.fridaHP > 11 && current.fridaHPMax != 0 && current.fridaHP <= 11) {
 		print("Frida defeated!");
+		return true;
+	}
+	// Warpstone
+	if (old.warpStone == 0 && current.warpStone == 1) {
+		print("Warp fragment obtained!");
 		return true;
 	}
 }
