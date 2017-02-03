@@ -8,8 +8,9 @@ state("MomodoraRUtM", "v1.04d")
  	double characterHP : 0x230DB60, 0x78, 0x414, 0x0;
 
  	// Edea split
- 	double edeaHP : 0x230D0EC, 0x4, 0x140, 0x4, 0x230;
- 	double edeaHPMax : 0x230D0EC, 0x4, 0x140, 0x4, 0x240;
+/* 	double edeaHP : 0x230D0EC, 0x4, 0x140, 0x4, 0x230;
+ 	double edeaHPMax : 0x230D0EC, 0x4, 0x140, 0x4, 0x240;*/
+ 	double edeaDefeated : 0x230D270, 0x880, 0x108, 0xE0;
 
  	// Lubella split
  	double lubellaHP : 0x230D0EC, 0x8, 0x140, 0x4, 0x230;
@@ -19,12 +20,12 @@ state("MomodoraRUtM", "v1.04d")
  	double fridaHP : 0x230D0EC, 0x34, 0x13C, 0x4, 0x230;
  	double fridaHPMax : 0x230D0EC, 0x34, 0x13C, 0x4, 0x240;
 
- 	// Arsonist split ------- realllllly fickle
+ 	// Arsonist split
 /* 	double arsonistHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
  	double arsonistHPMax : 0x22FE9E4, 0x0, 0x0, 0x4, 0x240;*/
  	double arsonistDefeated : 0x230D270, 0x880, 0x108, 0x9E0;
 
- 	// Warpstone
+ 	// Warpstone -- may not split, and may require a manual split currently!
  	double warpStone : 0x230DB28, 0x2C, 0xE44, 0x4, 0x5C0;
 }
 
@@ -58,9 +59,10 @@ split
 {
 
 	// We need HPMax checks to prevent splits upon death/leaving game.
+	// old.inGame is used to prevent splits from loading a save -- not necessary, but a just-in-case thing.
 
 	// Edea
-	if (old.edeaHP > 11 && current.edeaHPMax != 0 && current.edeaHP <= 11) {
+	if (old.edeaDefeated == 0 && current.edeaDefeated == 1 && old.inGame == 1) {
 		print("Edea defeated!");
 		return true;
 	}
@@ -75,12 +77,12 @@ split
 		return true;
 	}
 	// Arsonist
-	if (old.arsonistDefeated == 0 && current.arsonistDefeated == 1) {
+	if (old.arsonistDefeated == 0 && current.arsonistDefeated == 1 && old.inGame == 1) {
 		print("Arsonist defeated!");
 		return true;
 	}
 	// Warpstone
-	if (old.warpStone == 0 && current.warpStone == 1) {
+	if (old.warpStone == 0 && current.warpStone == 1 && old.inGame == 1) {
 		print("Warp fragment obtained!");
 		return true;
 	}
