@@ -1,8 +1,3 @@
-state("MomodoraRUtM", "default")
-{
-	string6 versionId : 0x8E9899;
-}
-
 state("MomodoraRUtM", "v1.04d")
 {
 
