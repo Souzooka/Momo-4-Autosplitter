@@ -87,12 +87,12 @@ init
 {
 	// Debug
 	print("modules.First().ModuleMemorySize == " + "0x" + modules.First().ModuleMemorySize.ToString("X8"));
-	print(current.versionId);
-	version = current.versionId;
+/*	print(current.versionId);
+	version = current.versionId;*/
 
-/*	if (modules.First().ModuleMemorySize == 0x25D6000) {
+	if (modules.First().ModuleMemorySize == 0x25D6000) {
 		version = "v1.04d";
-	}*/
+	}
 }
 
 start
