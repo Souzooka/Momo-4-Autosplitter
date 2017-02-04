@@ -168,7 +168,7 @@ split
 
 
 	// Warpstone
-	if (settings["warpStone"] && old.warpStone == 0 && current.warpStone == 1 && old.inGame == 1) {
+	if (settings["warpFragment"] && old.warpStone == 0 && current.warpStone == 1 && old.inGame == 1) {
 		print("Warp fragment obtained!");
 		return true;
 	}
