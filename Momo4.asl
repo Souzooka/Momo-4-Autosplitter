@@ -34,8 +34,20 @@ state("MomodoraRUtM", "v1.04d")
  	double arsonistHPMax : 0x22FE9E4, 0x0, 0x0, 0x4, 0x240;*/
  	double arsonistDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x9E0;
 
- 	// Warpstone -- may not split, and may require a manual split currently!
+ 	// Warpstone
  	double warpStone : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x5C0;
+
+ 	// Monastery Key
+ 	double monasteryKey : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x260;
+
+ 	// Fennel
+ 	double fennelDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x3D0;
+
+  	// Lupiar and Magnolia
+ 	double magnoliaDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x660;
+
+ 	// Lupiar and Magnolia
+ 	double freshSpringLeaf : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x600;
 
  	// Universal boss HP, very fickle and changes addresses a lot. Check current == old! Also switches to 0 when boss is defeated!
  	double bossHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
@@ -49,9 +61,6 @@ init
 {
 	// Debug
 	print("modules.First().ModuleMemorySize == " + "0x" + modules.First().ModuleMemorySize.ToString("X8"));
-
-	// There is a flag for Lubella 1's fight, but it's set to true after Moka is defeated, so the split requires a bit of special handling
-	vars.lubella1Defeated = false;
 
 	if (modules.First().ModuleMemorySize == 0x25D6000) {
 		version = "v1.04d";
@@ -92,7 +101,7 @@ split
 		return true;
 	}
 	// Lubella 1
-	if (old.lubella1HP > 11 && current.lubella1HPMax != 0 && current.lubella1HP <= 11 && !vars.lubella1Defeated) {
+	if (old.lubella1HP > 11 && current.lubella1HPMax == 130 && current.lubella1HP <= 11) {
 		print("Lubella 1 defeated!");
 		vars.lubella1Defeated = true;
 		return true;
@@ -102,17 +111,40 @@ split
 		print("Frida defeated!");
 		return true;
 	}
+		// Lubella 2
+	if (old.lubella1HP > 11 && current.lubella1HPMax == 150 && current.lubella1HP <= 11) {
+		print("Lubella 2 defeated!");
+		return true;
+	}
 	// Arsonist
 	if (old.arsonistDefeated == 0 && current.arsonistDefeated == 1 && old.inGame == 1) {
 		print("Arsonist defeated!");
 		return true;
 	}
-
-
+	// Fennel - SPLITS AT END OF CUTSCENE, WILL PROBABLY CHANGE LOGIC LATER
+	if (old.fennelDefeated == 0 && current.fennelDefeated == 1 && old.inGame == 1) {
+		print("Fennel defeated!");
+		return true;
+	}
+	// Lupiar & Magnolia - Splits when talking to Magnolia
+	if (old.magnoliaDefeated == 0 && current.magnoliaDefeated == 1 && old.inGame == 1) {
+		print("Magnolia defeated!");
+		return true;
+	}
 
 	// Warpstone
 	if (old.warpStone == 0 && current.warpStone == 1 && old.inGame == 1) {
 		print("Warp fragment obtained!");
+		return true;
+	}
+	// Monastery key
+	if (old.monasteryKey == 0 && current.monasteryKey == 1 && old.inGame == 1) {
+		print("Monastery key obtained!");
+		return true;
+	}
+		// Fresh Spring Leaf
+	if (old.freshSpringLeaf == 0 && current.freshSpringLeaf == 1 && old.inGame == 1) {
+		print("Fresh Spring Leaf obtained!");
 		return true;
 	}
 }
