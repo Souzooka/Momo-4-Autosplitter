@@ -7,6 +7,7 @@ state("MomodoraRUtM", "v1.04d")
 {
 
 	string6 versionId : 0x8E9899;
+	byte levelId : "MomodoraRUtM.exe", 0x230AF00;
 
 	// For start
  	double difficultySelector : 0x22C17DC, 0xCB4, 0xC, 0x4, 0x41B0;
@@ -46,8 +47,14 @@ state("MomodoraRUtM", "v1.04d")
   	// Lupiar and Magnolia
  	double magnoliaDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x660;
 
- 	// Lupiar and Magnolia
+ 	// Fresh Spring Leaf
  	double freshSpringLeaf : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x600;
+
+ 	// Clone Angel
+ 	double cloneAngelDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x640;
+
+ 	// Queen
+ 	double alternativeFacts : 0x2300A48, 0x4, 0xAB0;
 
  	// Universal boss HP, very fickle and changes addresses a lot. Check current == old! Also switches to 0 when boss is defeated!
  	double bossHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
@@ -69,7 +76,7 @@ init
 
 update
 {
-
+print(current.alternativeFacts.ToString());
 }
 
 start
@@ -84,7 +91,7 @@ reset
 {
 	if (current.inGame == 0 && old.inGame == 1 && current.characterHP == 30) {
 		print("reset returned true!");
-		vars.lubella1Defeated = false;
+		vars.cutscenes = 0;
 		return true;
 	}
 }
@@ -131,6 +138,18 @@ split
 		print("Magnolia defeated!");
 		return true;
 	}
+	// Clone Angel
+	if (old.cloneAngelDefeated == 0 && current.cloneAngelDefeated == 1 && old.inGame == 1) {
+		print("Clone Angel defeated!");
+		return true;
+	}
+	// Queen
+	if (current.levelId == 232 && old.alternativeFacts == 0 && current.alternativeFacts == 1000) {
+		print("Queen defeated!");
+		return true;
+	}
+
+
 
 	// Warpstone
 	if (old.warpStone == 0 && current.warpStone == 1 && old.inGame == 1) {
@@ -142,7 +161,7 @@ split
 		print("Monastery key obtained!");
 		return true;
 	}
-		// Fresh Spring Leaf
+	// Fresh Spring Leaf
 	if (old.freshSpringLeaf == 0 && current.freshSpringLeaf == 1 && old.inGame == 1) {
 		print("Fresh Spring Leaf obtained!");
 		return true;
