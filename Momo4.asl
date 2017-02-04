@@ -12,7 +12,7 @@ state("MomodoraRUtM", "v1.04d")
  	double difficultySelector : 0x22C17DC, 0xCB4, 0xC, 0x4, 0x41B0;
 
  	// For reset
- 	double inGame : 0x230DB60, 0x4, 0x54, 0x780;
+ 	double inGame : 0x2300A48, 0x4, 0x780;
  	double characterHP : 0x230DB60, 0x78, 0x414, 0x0;
 
  	// Edea split
@@ -37,9 +37,12 @@ state("MomodoraRUtM", "v1.04d")
  	// Warpstone -- may not split, and may require a manual split currently!
  	double warpStone : 0x230D0F8, 0x3B8, 0x80, 0x814, 0x5C0;
 
- 	// Universal boss HP, very fickle and changes addresses a lot. Check current == old!
+ 	// Universal boss HP, very fickle and changes addresses a lot. Check current == old! Also switches to 0 when boss is defeated!
  	double bossHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
  	double bossHPMax : 0x22FE9E4, 0x0, 0x0, 0x4, 0x240;
+
+ 	// Player movement lock value, can prove to be useful as it is set to 1 during cutscenes.
+ 	double playerMovementLock : 0x230D0F8, 0x3C0, 0x8C0, 0xF8, 0x670;
 }
 
 init
@@ -104,6 +107,9 @@ split
 		print("Arsonist defeated!");
 		return true;
 	}
+
+
+
 	// Warpstone
 	if (old.warpStone == 0 && current.warpStone == 1 && old.inGame == 1) {
 		print("Warp fragment obtained!");
