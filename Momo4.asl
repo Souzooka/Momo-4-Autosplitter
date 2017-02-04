@@ -64,6 +64,25 @@ state("MomodoraRUtM", "v1.04d")
  	double playerMovementLock : 0x230D0F8, 0x3C0, 0x8C0, 0xF8, 0x670;
 }
 
+startup
+{
+	settings.Add("splits", true, "All Splits");
+
+	settings.Add("edea", true, "Edea", "splits");
+	settings.Add("lubella1", true, "Lubella 1", "splits");
+	settings.Add("frida", true, "Frida", "splits");
+	settings.Add("lubella2", true, "Lubella 2", "splits");
+	settings.Add("warpFragment", true, "Warp Fragment", "splits");
+	settings.Add("arsonist", true, "Arsonist", "splits");
+	settings.Add("monasteryKey", true, "Monastery Key", "splits");
+	settings.Add("fennel", true, "Fennel", "splits");
+	settings.Add("magnolia", true, "Lupiar and Magnolia", "splits");
+	settings.Add("freshSpringLeaf", true, "Fresh Spring Leaf", "splits");
+	settings.Add("cloneAngel", true, "Clone Angel", "splits");
+	settings.Add("queen", true, "Queen", "splits");
+
+}
+
 init
 {
 	// Debug
@@ -100,48 +119,48 @@ split
 	// old.inGame is used to prevent splits from loading a save -- not necessary, but a just-in-case thing.
 
 	// Edea
-	if (old.edeaDefeated == 0 && current.edeaDefeated == 1 && old.inGame == 1) {
+	if (settings["edea"] && old.edeaDefeated == 0 && current.edeaDefeated == 1 && old.inGame == 1) {
 		print("Edea defeated!");
 		return true;
 	}
 	// Lubella 1
-	if (old.lubella1HP > 11 && current.lubella1HPMax == 130 && current.lubella1HP <= 11) {
+	if (settings["lubella1"] && old.lubella1HP > 11 && current.lubella1HPMax == 130 && current.lubella1HP <= 11) {
 		print("Lubella 1 defeated!");
 		vars.lubella1Defeated = true;
 		return true;
 	}
 	// Frida
-	if (old.fridaHP > 11 && current.fridaHPMax != 0 && current.fridaHP <= 11) {
+	if (settings["frida"] && old.fridaHP > 11 && current.fridaHPMax != 0 && current.fridaHP <= 11) {
 		print("Frida defeated!");
 		return true;
 	}
 		// Lubella 2
-	if (old.lubella1HP > 11 && current.lubella1HPMax == 150 && current.lubella1HP <= 11) {
+	if (settings["lubella2"] && old.lubella1HP > 11 && current.lubella1HPMax == 150 && current.lubella1HP <= 11) {
 		print("Lubella 2 defeated!");
 		return true;
 	}
 	// Arsonist
-	if (old.arsonistDefeated == 0 && current.arsonistDefeated == 1 && old.inGame == 1) {
+	if (settings["arsonist"] && old.arsonistDefeated == 0 && current.arsonistDefeated == 1 && old.inGame == 1) {
 		print("Arsonist defeated!");
 		return true;
 	}
 	// Fennel - SPLITS AT END OF CUTSCENE, WILL PROBABLY CHANGE LOGIC LATER
-	if (old.fennelDefeated == 0 && current.fennelDefeated == 1 && old.inGame == 1) {
+	if (settings["fennel"] && old.fennelDefeated == 0 && current.fennelDefeated == 1 && old.inGame == 1) {
 		print("Fennel defeated!");
 		return true;
 	}
 	// Lupiar & Magnolia - Splits when talking to Magnolia
-	if (old.magnoliaDefeated == 0 && current.magnoliaDefeated == 1 && old.inGame == 1) {
+	if (settings["magnolia"] && old.magnoliaDefeated == 0 && current.magnoliaDefeated == 1 && old.inGame == 1) {
 		print("Magnolia defeated!");
 		return true;
 	}
 	// Clone Angel
-	if (old.cloneAngelDefeated == 0 && current.cloneAngelDefeated == 1 && old.inGame == 1) {
+	if (settings["cloneAngel"] && old.cloneAngelDefeated == 0 && current.cloneAngelDefeated == 1 && old.inGame == 1) {
 		print("Clone Angel defeated!");
 		return true;
 	}
 	// Queen
-	if (current.levelId == 232 && old.alternativeFacts == 0 && current.alternativeFacts == 1000) {
+	if (settings["queen"] && current.levelId == 232 && old.alternativeFacts == 0 && current.alternativeFacts == 1000) {
 		print("Queen defeated!");
 		return true;
 	}
@@ -149,17 +168,17 @@ split
 
 
 	// Warpstone
-	if (old.warpStone == 0 && current.warpStone == 1 && old.inGame == 1) {
+	if (settings["warpStone"] && old.warpStone == 0 && current.warpStone == 1 && old.inGame == 1) {
 		print("Warp fragment obtained!");
 		return true;
 	}
 	// Monastery key
-	if (old.monasteryKey == 0 && current.monasteryKey == 1 && old.inGame == 1) {
+	if (settings["monasteryKey"] && old.monasteryKey == 0 && current.monasteryKey == 1 && old.inGame == 1) {
 		print("Monastery key obtained!");
 		return true;
 	}
 	// Fresh Spring Leaf
-	if (old.freshSpringLeaf == 0 && current.freshSpringLeaf == 1 && old.inGame == 1) {
+	if (settings["freshSpringLeaf"] && old.freshSpringLeaf == 0 && current.freshSpringLeaf == 1 && old.inGame == 1) {
 		print("Fresh Spring Leaf obtained!");
 		return true;
 	}
