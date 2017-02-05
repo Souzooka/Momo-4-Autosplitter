@@ -1,3 +1,8 @@
+state("MomodoraRUtM", "v1.04dWin10")
+{
+	byte levelId: 0x230AE80;
+}
+
 state("MomodoraRUtM", "v1.04d")
 {
 
