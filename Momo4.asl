@@ -1,8 +1,3 @@
-state("MomodoraRUtM", "v1.04dWin10")
-{
-	byte levelId: 0x230AE80;
-}
-
 state("MomodoraRUtM", "v1.04d")
 {
 
@@ -24,15 +19,13 @@ state("MomodoraRUtM", "v1.04d")
  	// Lubella 1 split
  	double lubella1HP : 0x230D0EC, 0x8, 0x140, 0x4, 0x230;
  	double lubella1HPMax : 0x230D0EC, 0x8, 0x140, 0x4, 0x240;
- 	double mokaDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x4C0; // Boss flag
+/* 	double mokaDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x4C0;*/
 
  	// Frida split
  	double fridaHP : 0x230D0EC, 0x34, 0x13C, 0x4, 0x230;
  	double fridaHPMax : 0x230D0EC, 0x34, 0x13C, 0x4, 0x240;
 
  	// Arsonist split
-/* 	double arsonistHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
- 	double arsonistHPMax : 0x22FE9E4, 0x0, 0x0, 0x4, 0x240;*/
  	double arsonistDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x9E0;
 
  	// Warpstone
@@ -57,11 +50,11 @@ state("MomodoraRUtM", "v1.04d")
  	double alternativeFacts : 0x2300A48, 0x4, 0xAB0;
 
  	// Universal boss HP, very fickle and changes addresses a lot. Check current == old! Also switches to 0 when boss is defeated!
- 	double bossHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
- 	double bossHPMax : 0x22FE9E4, 0x0, 0x0, 0x4, 0x240;
+/* 	double bossHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
+ 	double bossHPMax : 0x22FE9E4, 0x0, 0x0, 0x4, 0x240;*/
 
  	// Player movement lock value, can prove to be useful as it is set to 1 during cutscenes.
- 	double playerMovementLock : 0x230D0F8, 0x3C0, 0x8C0, 0xF8, 0x670;
+/* 	double playerMovementLock : 0x230D0F8, 0x3C0, 0x8C0, 0xF8, 0x670;*/
 }
 
 startup
@@ -81,14 +74,15 @@ startup
 	settings.Add("cloneAngel", true, "Clone Angel", "splits");
 	settings.Add("queen", true, "Queen", "splits");
 
+	print("Hey, this compiled correctly. Way to go!");
+
 }
 
 init
 {
 	// Debug
 	print("modules.First().ModuleMemorySize == " + "0x" + modules.First().ModuleMemorySize.ToString("X8"));
-/*	print(current.versionId);
-	version = current.versionId;*/
+	print(current.versionId);
 
 	if (modules.First().ModuleMemorySize == 0x25D6000) {
 		version = "v1.04d";
@@ -164,8 +158,6 @@ split
 		print("Queen defeated!");
 		return true;
 	}
-
-
 
 	// Warpstone
 	if (settings["warpFragment"] && old.warpStone == 0 && current.warpStone == 1 && old.inGame == 1) {
