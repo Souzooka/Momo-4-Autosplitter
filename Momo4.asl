@@ -4,6 +4,9 @@ state("MomodoraRUtM", "v1.04d")
 	string6 versionId : 0x8E9899;
 	byte levelId : "MomodoraRUtM.exe", 0x230AF00;
 
+	// 0 == we're not in a boss, 1 == we're in a boss cutscene, 2 == we're in a boss fight!
+	double bossFightStatus: 0x2300A48, 0x4, 0x1190;
+
 	// For start
  	double difficultySelector : 0x22C17DC, 0xCB4, 0xC, 0x4, 0x41B0;
 
@@ -49,12 +52,15 @@ state("MomodoraRUtM", "v1.04d")
  	// Queen
  	double cutseneProgress : 0x2300A48, 0x4, 0xAB0;
 
+ 	// Choir
+ 	double choirDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x6A0;
+
  	// Universal boss HP, very fickle and changes addresses a lot. Check current == old! Also switches to 0 when boss is defeated!
 /* 	double bossHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
  	double bossHPMax : 0x22FE9E4, 0x0, 0x0, 0x4, 0x240;*/
 
  	// Player movement lock value, can prove to be useful as it is set to 1 during cutscenes.
-/* 	double playerMovementLock : 0x230D0F8, 0x3C0, 0x8C0, 0xF8, 0x670;*/
+/*	double playerMovementLock : 0x230D0F8, 0x3C0, 0x8C0, 0xF8, 0x670;*/
 }
 
 startup
@@ -73,6 +79,7 @@ startup
 	settings.Add("freshSpringLeaf", true, "Fresh Spring Leaf", "splits");
 	settings.Add("cloneAngel", true, "Clone Angel", "splits");
 	settings.Add("queen", true, "Queen", "splits");
+	settings.Add("choir", false, "Choir", "splits");
 
 	print("Hey, this compiled correctly. Way to go!");
 
@@ -124,7 +131,7 @@ split
 		return true;
 	}
 	// Frida
-	if (settings["frida"] && old.fridaHP > 11 && current.fridaHPMax != 0 && current.fridaHP <= 11) {
+	if (settings["frida"] && old.fridaHP > 11 && current.fridaHPMax != 0 && current.fridaHP <= 11 && current.levelId != 97) {
 		print("Frida defeated!");
 		return true;
 	}
@@ -156,6 +163,12 @@ split
 	// Queen
 	if (settings["queen"] && current.levelId == 232 && old.cutseneProgress == 0 && current.cutseneProgress == 1000) {
 		print("Queen defeated!");
+		return true;
+	}
+
+	// Choir
+		if (settings["choir"] && current.choirDefeated == 1 && old.choirDefeated == 0 && old.inGame == 1) {
+		print("Choir defeated!");
 		return true;
 	}
 
