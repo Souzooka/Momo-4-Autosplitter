@@ -47,7 +47,7 @@ state("MomodoraRUtM", "v1.04d")
  	double cloneAngelDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x640;
 
  	// Queen
- 	double alternativeFacts : 0x2300A48, 0x4, 0xAB0;
+ 	double cutseneProgress : 0x2300A48, 0x4, 0xAB0;
 
  	// Universal boss HP, very fickle and changes addresses a lot. Check current == old! Also switches to 0 when boss is defeated!
 /* 	double bossHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
@@ -134,7 +134,7 @@ split
 		return true;
 	}
 	// Arsonist
-	if (settings["arsonist"] && old.arsonistDefeated == 0 && current.arsonistDefeated == 1 && old.inGame == 1) {
+	if (settings["arsonist"] && current.cutseneProgress == 0 && old.cutseneProgress == 500 && current.levelId == 147) {
 		print("Arsonist defeated!");
 		return true;
 	}
@@ -154,7 +154,7 @@ split
 		return true;
 	}
 	// Queen
-	if (settings["queen"] && current.levelId == 232 && old.alternativeFacts == 0 && current.alternativeFacts == 1000) {
+	if (settings["queen"] && current.levelId == 232 && old.cutseneProgress == 0 && current.cutseneProgress == 1000) {
 		print("Queen defeated!");
 		return true;
 	}
