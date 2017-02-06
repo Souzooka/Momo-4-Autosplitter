@@ -136,12 +136,12 @@ split
 		return true;
 	}
 		// Lubella 2
-	if (settings["lubella2"] && old.lubella1HP > 11 && current.lubella1HPMax == 150 && current.lubella1HP <= 11) {
+	if (settings["lubella2"] && current.cutseneProgress == 0 && old.cutseneProgress == 500 && current.levelId == 147) {
 		print("Lubella 2 defeated!");
 		return true;
 	}
 	// Arsonist
-	if (settings["arsonist"] && current.cutseneProgress == 0 && old.cutseneProgress == 500 && current.levelId == 147) {
+	if (settings["arsonist"] && current.arsonistDefeated == 1 && old.arsonistDefeated == 0 && old.inGame == 1) {
 		print("Arsonist defeated!");
 		return true;
 	}
