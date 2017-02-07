@@ -1,11 +1,34 @@
+// Hi. If you're looking at this code, you might be interested in updating it for a newer version of MomodoraRUtM. This is actually really easy! 
+// Basically, all you need to do is locate four unique pointer paths (one of which even is a static pointer). Last offsets should hopefully be the same.
+
+// The first is for the double difficultySelector. This needs to be used (rather than levelId) for accurate starting time. This double value is 1 when selecting easy, 2 for normal, 3 for hard, 4 for insane, and 0 every other time.
+// Note that if the last offset changes from 0x41B0, finding out what writes to this address via CE should give you an accurate last offset.
+// This is the only value we use with this pointer path.
+
+// The second is for characterHP. This double value is 30 in the main menu, 80 on easy, 30 on normal, 15 on hard, and 1 on insane, and obviously decreases/increases according to game rules.
+// characterHP's last offset should always be 0x0.
+// We use this value for characterHP, inGame, and cutsceneProgress.
+
+// The third is for levelId. This one should be easy to find. This is a byte value with a static pointer, and should be 1 on saves, 11 on difficulty selection, and 21 on the first area.
+
+// The fourth is for various flags and statistics, and this encompasses almost the rest of the values.
+
+// The last is the trickiest, for Lubella 1. Her flag is set after Moka is defeated, and there are no other clear indicators for her being defeated except for her HP. #thanksbombservice
+// HP pointers seem to change based on boss order, so thankfully she is always fought second.
+// She starts at 130 HP, and is defeated at <= 11 HP.
+// Boss' HP last offset is 0x230, max HP is 0x240. Do NOT use a <base address>, 0x0, 0x0, 0x4, 0x230 pointer! This is for universal boss HP, but also appears to point at other addresses very often. Will definitely cause unintended behavior!
+
+// If you're not me and updating this script, send a pull request to the gitHub at https://github.com/Souzooka/Momo-4-Autosplitter
+
+
+
 state("MomodoraRUtM", "v1.04d")
 {
 
-	string6 versionId : 0x8E9899;
+	// General
+	double cutseneProgress : 0x2300A48, 0x4, 0xAB0;
+	/*string6 versionId : 0x8E9899;*/
 	byte levelId : "MomodoraRUtM.exe", 0x230AF00;
-
-	// 0 == we're not in a boss, 1 == we're in a boss cutscene, 2 == we're in a boss fight!
-	double bossFightStatus: 0x2300A48, 0x4, 0x1190;
 
 	// For start
  	double difficultySelector : 0x22C17DC, 0xCB4, 0xC, 0x4, 0x41B0;
@@ -15,18 +38,14 @@ state("MomodoraRUtM", "v1.04d")
  	double characterHP : 0x2300A48, 0x4, 0x0;
 
  	// Edea split
-/* 	double edeaHP : 0x230D0EC, 0x4, 0x140, 0x4, 0x230;
- 	double edeaHPMax : 0x230D0EC, 0x4, 0x140, 0x4, 0x240;*/
  	double edeaDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0xE0;
 
  	// Lubella 1 split
  	double lubella1HP : 0x230D0EC, 0x8, 0x140, 0x4, 0x230;
  	double lubella1HPMax : 0x230D0EC, 0x8, 0x140, 0x4, 0x240;
-/* 	double mokaDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x4C0;*/
 
  	// Frida split
- 	double fridaHP : 0x230D0EC, 0x34, 0x13C, 0x4, 0x230;
- 	double fridaHPMax : 0x230D0EC, 0x34, 0x13C, 0x4, 0x240;
+ 	// see cutsceneProgress
 
  	// Arsonist split
  	double arsonistDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x9E0;
@@ -50,7 +69,7 @@ state("MomodoraRUtM", "v1.04d")
  	double cloneAngelDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x640;
 
  	// Queen
- 	double cutseneProgress : 0x2300A48, 0x4, 0xAB0;
+ 	// see cutsceneProgress
 
  	// Choir
  	double choirDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x6A0;
@@ -58,13 +77,6 @@ state("MomodoraRUtM", "v1.04d")
  	// 100%
  	double ivoryBugs : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x3C0;
  	double vitalityFragments : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0xAE0;
-
- 	// Universal boss HP, very fickle and changes addresses a lot. Check current == old! Also switches to 0 when boss is defeated!
-/* 	double bossHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
- 	double bossHPMax : 0x22FE9E4, 0x0, 0x0, 0x4, 0x240;*/
-
- 	// Player movement lock value, can prove to be useful as it is set to 1 during cutscenes.
-/*	double playerMovementLock : 0x230D0F8, 0x3C0, 0x8C0, 0xF8, 0x670;*/
 }
 
 startup
@@ -96,7 +108,7 @@ init
 {
 	// Debug
 	print("modules.First().ModuleMemorySize == " + "0x" + modules.First().ModuleMemorySize.ToString("X8"));
-	print(current.versionId);
+	/*print(current.versionId);*/
 
 	if (modules.First().ModuleMemorySize == 0x25D6000) {
 		version = "v1.04d";
@@ -122,8 +134,8 @@ reset
 split
 {
 
-	// We need HPMax checks to prevent splits upon death/leaving game.
-	// old.inGame is used to prevent splits from loading a save -- not necessary, but a just-in-case thing.
+	// various flags are set during or at the beginning of boss fights, which is why we use cutsceneProgress trickery.
+	// old.inGame is to prevent splits upon loading a save.
 
 	// Edea
 	if (settings["edea"] && old.edeaDefeated == 0 && current.edeaDefeated == 1 && old.inGame == 1) {
