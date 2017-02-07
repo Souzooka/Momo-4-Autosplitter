@@ -131,7 +131,7 @@ split
 		return true;
 	}
 	// Frida
-	if (settings["frida"] && old.fridaHP > 11 && current.fridaHPMax != 0 && current.fridaHP <= 11 && current.levelId != 97) {
+	if (settings["frida"] && current.levelId == 141 && current.cutseneProgress == 0 && old.cutseneProgress == 500) {
 		print("Frida defeated!");
 		return true;
 	}
