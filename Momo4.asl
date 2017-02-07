@@ -55,6 +55,10 @@ state("MomodoraRUtM", "v1.04d")
  	// Choir
  	double choirDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x6A0;
 
+ 	// 100%
+ 	double ivoryBugs : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x3C0;
+ 	double vitalityFragments : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0xAE0;
+
  	// Universal boss HP, very fickle and changes addresses a lot. Check current == old! Also switches to 0 when boss is defeated!
 /* 	double bossHP : 0x22FE9E4, 0x0, 0x0, 0x4, 0x230;
  	double bossHPMax : 0x22FE9E4, 0x0, 0x0, 0x4, 0x240;*/
@@ -65,6 +69,7 @@ state("MomodoraRUtM", "v1.04d")
 
 startup
 {
+	settings.Add("100%Check", false, "100% Run");
 	settings.Add("splits", true, "All Splits");
 
 	settings.Add("edea", true, "Edea", "splits");
@@ -80,6 +85,8 @@ startup
 	settings.Add("cloneAngel", true, "Clone Angel", "splits");
 	settings.Add("queen", true, "Queen", "splits");
 	settings.Add("choir", false, "Choir", "splits");
+
+	settings.SetToolTip("100%Check", "If checked, will only split for Queen if Choir is defeated, 17 vitality fragments were obtained, and 20 bug ivories were collected.");
 
 	print("Hey, this compiled correctly. Way to go!");
 
@@ -108,7 +115,6 @@ reset
 {
 	if (current.inGame == 0 && old.inGame == 1 && current.characterHP == 30) {
 		print("reset returned true!");
-		vars.cutscenes = 0;
 		return true;
 	}
 }
@@ -161,13 +167,41 @@ split
 		return true;
 	}
 	// Queen
-	if (settings["queen"] && current.levelId == 232 && old.cutseneProgress == 0 && current.cutseneProgress == 1000) {
+	if (settings["queen"] && !settings["100%Check"] && current.levelId == 232 && old.cutseneProgress == 0 && current.cutseneProgress == 1000) {
 		print("Queen defeated!");
 		return true;
 	}
 
+	// Queen 100%
+	if (settings["queen"] && settings["100%Check"] && current.levelId == 232 && old.cutseneProgress == 0 && current.cutseneProgress == 1000) {
+		print("Checking 100% conditions:");
+		if (current.choirDefeated == 1) {
+			print("Choir has been defeated!");
+			if (current.ivoryBugs == 20) {
+				print("Bug ivories collected: " + current.ivoryBugs + "/20. All bugs collected!");
+				if (current.vitalityFragments == 17) {
+					print("Vitality fragments collected: " + current.vitalityFragments + "/17. All vitality fragments collected!");
+					return true;
+				}
+				else {
+					print("Vitality fragments collected: " + current.vitalityFragments + "/17, not splitting.");
+				}
+			}
+			else {
+				print("Bug ivories collected: " + current.ivoryBugs + "/20, not splitting.");
+				print("Vitality fragments collected: " + current.vitalityFragments + "/17, not splitting.");
+			}
+		}
+		else {
+			print("Choir hasn't been defeated yet, not splitting.");
+			print("Bug ivories collected: " + current.ivoryBugs + "/20, not splitting.");
+			print("Vitality fragments collected: " + current.vitalityFragments + "/17, not splitting.");
+		}
+	}
+
 	// Choir
-		if (settings["choir"] && current.choirDefeated == 1 && old.choirDefeated == 0 && old.inGame == 1) {
+	if (settings["choir"] && current.choirDefeated == 1 && old.choirDefeated == 0 && old.inGame == 1) {
+		vars.choirDefeated = 1;
 		print("Choir defeated!");
 		return true;
 	}
