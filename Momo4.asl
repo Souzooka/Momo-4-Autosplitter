@@ -167,35 +167,19 @@ split
 		return true;
 	}
 	// Queen
-	if (settings["queen"] && !settings["100%Check"] && current.levelId == 232 && old.cutseneProgress == 0 && current.cutseneProgress == 1000) {
+	if (settings["queen"] && !settings["100%Check"] && current.levelId == 232 && old.cutseneProgress != 1000 && current.cutseneProgress == 1000) {
 		print("Queen defeated!");
 		return true;
 	}
 
 	// Queen 100%
-	if (settings["queen"] && settings["100%Check"] && current.levelId == 232 && old.cutseneProgress == 0 && current.cutseneProgress == 1000) {
+	if (settings["queen"] && settings["100%Check"] && current.levelId == 232 && old.cutseneProgress != 1000 && current.cutseneProgress == 1000) {
 		print("Checking 100% conditions:");
-		if (current.choirDefeated == 1) {
-			print("Choir has been defeated!");
-			if (current.ivoryBugs == 20) {
-				print("Bug ivories collected: " + current.ivoryBugs + "/20. All bugs collected!");
-				if (current.vitalityFragments == 17) {
-					print("Vitality fragments collected: " + current.vitalityFragments + "/17. All vitality fragments collected!");
-					return true;
-				}
-				else {
-					print("Vitality fragments collected: " + current.vitalityFragments + "/17, not splitting.");
-				}
-			}
-			else {
-				print("Bug ivories collected: " + current.ivoryBugs + "/20, not splitting.");
-				print("Vitality fragments collected: " + current.vitalityFragments + "/17, not splitting.");
-			}
-		}
-		else {
-			print("Choir hasn't been defeated yet, not splitting.");
-			print("Bug ivories collected: " + current.ivoryBugs + "/20, not splitting.");
-			print("Vitality fragments collected: " + current.vitalityFragments + "/17, not splitting.");
+		print("Has Choir been defeated?: " + Convert.ToBoolean(current.choirDefeated));
+		print("Bug ivories collected: " + current.ivoryBugs + "/20.");
+		print("Vitality fragments collected: " + current.vitalityFragments + "/17.");
+		if (current.choirDefeated == 1 && current.ivoryBugs == 20 && current.vitalityFragments == 17) {
+			return true;
 		}
 	}
 
