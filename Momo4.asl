@@ -140,9 +140,7 @@ update
 			sw.WriteLine("Has Choir been defeated?: " + Convert.ToBoolean(current.choirDefeated));
 			sw.WriteLine("Bug ivories collected: " + current.ivoryBugs + "/20.");
 			sw.WriteLine("Vitality fragments collected: " + current.vitalityFragments + "/17.");
-			sw.WriteLine("");
-			sw.WriteLine("_______________");
-			sw.WriteLine("");
+			sw.WriteLine("\r\n_______________\r\n");
 			sw.WriteLine("Total HP lost: " + vars.hpLost);
 			sw.WriteLine("Non-boss enemies killed: " + current.enemiesKilled);
 		}
