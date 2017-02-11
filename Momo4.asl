@@ -1,5 +1,5 @@
 // Hi. If you're looking at this code, you might be interested in updating it for a newer version of MomodoraRUtM. This is actually really easy! 
-// Basically, all you need to do is locate four unique pointer paths (one of which even is a static pointer). Last offsets should hopefully be the same.
+// Basically, all you need to do is locate five unique pointer paths (one of which even is a static pointer). Last offsets should hopefully be the same.
 
 // The first is for the double difficultySelector. This needs to be used (rather than levelId) for accurate starting time. This double value is 1 when selecting easy, 2 for normal, 3 for hard, 4 for insane, and 0 every other time.
 // Note that if the last offset changes from 0x41B0, finding out what writes to this address via CE should give you an accurate last offset.
@@ -81,6 +81,7 @@ state("MomodoraRUtM", "v1.04d")
 
 startup
 {
+	settings.Add("saveRunData", false, "Save Run Data");
 	settings.Add("100%Check", false, "100% Run");
 	settings.Add("splits", true, "All Splits");
 
@@ -98,6 +99,7 @@ startup
 	settings.Add("queen", true, "Queen", "splits");
 	settings.Add("choir", false, "Choir", "splits");
 
+	settings.SetToolTip("saveRunData", "REQUIRES LIVESPLIT TO BE RUN AS ADMINISTRATOR. Will create a text file containing run stats under \"Livesplit 1.6.9\\MomodoraRUtM\"");
 	settings.SetToolTip("100%Check", "If checked, will only split for Queen if Choir is defeated, 17 vitality fragments were obtained, and 20 bug ivories were collected.");
 
 	print("Hey, this compiled correctly. Way to go!");
@@ -112,6 +114,44 @@ init
 
 	if (modules.First().ModuleMemorySize == 0x25D6000) {
 		version = "v1.04d";
+	}
+
+	// Statistics
+	vars.hpLost = 0;
+}
+
+update
+{
+	// Save run data. REQUIRES ADMIN RIGHTS!
+	if (settings["saveRunData"] && current.levelId == 232 && old.cutseneProgress != 1000 && current.cutseneProgress == 1000) {
+		if (!System.IO.Directory.Exists("MomodoraRUtM")) {
+			System.IO.Directory.CreateDirectory("MomodoraRUtM");
+		}
+		using (System.IO.StreamWriter sw = new System.IO.StreamWriter(@"MomodoraRUtM\MomodoraRUtM " + DateTime.Now.ToString("HH.mm.ss - MM.dd.yyyy") + ".txt")) {
+			if (current.choirDefeated == 1 && current.ivoryBugs == 20 && current.vitalityFragments == 17) {
+				sw.WriteLine("Is this a \"100%\" run?: True");
+			}
+			else {
+				sw.WriteLine("Is this a \"100%\" run?: False");
+			}
+			sw.WriteLine("Has Choir been defeated?: " + Convert.ToBoolean(current.choirDefeated));
+			sw.WriteLine("Bug ivories collected: " + current.ivoryBugs + "/20.");
+			sw.WriteLine("Vitality fragments collected: " + current.vitalityFragments + "/17.");
+			sw.WriteLine("");
+			sw.WriteLine("_______________");
+			sw.WriteLine("");
+			sw.WriteLine("Total HP lost: " + vars.hpLost);
+		}
+	}
+
+	// Statistics management start
+	if (timer.CurrentTime.ToString() == "00:00:00 | 00:00:00") {
+		// Reset variables
+		vars.hpLost = 0;
+	}
+
+	if (current.characterHP < old.characterHP && current.inGame == 1) {
+		vars.hpLost += (old.characterHP - current.characterHP);
 	}
 }
 
@@ -134,6 +174,7 @@ reset
 split
 {
 
+
 	// various flags are set during or at the beginning of boss fights, which is why we use cutsceneProgress trickery.
 	// old.inGame is to prevent splits upon loading a save.
 
@@ -153,7 +194,7 @@ split
 		print("Frida defeated!");
 		return true;
 	}
-		// Lubella 2
+	// Lubella 2
 	if (settings["lubella2"] && current.cutseneProgress == 0 && old.cutseneProgress == 500 && current.levelId == 147) {
 		print("Lubella 2 defeated!");
 		return true;
