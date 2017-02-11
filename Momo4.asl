@@ -77,6 +77,9 @@ state("MomodoraRUtM", "v1.04d")
  	// 100%
  	double ivoryBugs : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x3C0;
  	double vitalityFragments : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0xAE0;
+
+ 	// Statistics
+ 	double enemiesKilled : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x490;
 }
 
 startup
@@ -141,6 +144,7 @@ update
 			sw.WriteLine("_______________");
 			sw.WriteLine("");
 			sw.WriteLine("Total HP lost: " + vars.hpLost);
+			sw.WriteLine("Non-boss enemies killed: " + current.enemiesKilled);
 		}
 	}
 
