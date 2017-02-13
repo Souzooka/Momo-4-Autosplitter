@@ -7,8 +7,6 @@
 // We might be able to make our own pointer using an aobscan for code that changes boss HP
 // Bosses die at <= 11 HP
 
-// Note: Livesplit will throw out errors until the difficulty menu is opened
-
 state("MomodoraRUtM", "v1.04d")
 {
  	// Lubella 1 split
@@ -49,6 +47,8 @@ startup
 
 init
 {
+	// Placeholders
+	vars.difficultySelector = new MemoryWatcher<double>(IntPtr.Zero); 
 
 	// Statistics
 	vars.hpLost = 0;
@@ -79,6 +79,8 @@ init
 	);
 
 	// Wait for the game to be loaded, otherwise scans will return 0
+	// TODO: 
+	// Find better way of checking if the game is loaded or not rather than just waiting
 	Thread.Sleep(4000);
 
 	// Find code address (+ 0x2 for levelId, first int in SigScanTarget)
