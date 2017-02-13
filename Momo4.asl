@@ -2,6 +2,7 @@
 // Futureproofing info
 // This game seems to be updated frequently, so we need to set up some aobscans ASAP
 
+// TODO
 // Flags' addresses are accessed by adding a base address to an offset in eax (I think it's eax anyways). The flags are all doubles.
 // * edeaDefeated: 0xE0
 // * arsonistDefeated: 0x9E0
@@ -23,13 +24,18 @@
 // We might be able to make our own pointer using an aobscan for code that changes boss HP
 // Bosses die at <= 11 HP
 
+// DONE!
 // levelId is 1 at title, 11 in save, 21 in first room -- it is a byte
+//
 
+// TODO
 // difficultySelector needs to be used for best start timing, it's 1 when looking at easy, 2 for normal, 3 for hard, 4 for insane, and 0 otherwise.
 
+// TODO
 // even if a universal HP can't be found, since it's found off of charHP we can still use cutsceneProgress
 // cutsceneProgress is a misnomer, I'm not sure how this changes but it is consistent and stable.
 
+// TODO
 // find aobscan for characterHP being changed
 // offsets from characterHP address:
 // * characterHP: 0x0
@@ -43,7 +49,9 @@ state("MomodoraRUtM", "v1.04d")
 	// General
 	double cutseneProgress : 0x2300A48, 0x4, 0xAB0;
 	/*string6 versionId : 0x8E9899;*/
-	byte levelId : "MomodoraRUtM.exe", 0x230AF00;
+
+	// depreciated
+	/*byte levelId : "MomodoraRUtM.exe", 0x230AF00;*/
 
 	// For start
  	double difficultySelector : 0x22C17DC, 0xCB4, 0xC, 0x4, 0x41B0;
@@ -128,30 +136,6 @@ startup
 
 	vars.watchers = new MemoryWatcherList();
 
-	vars.ReadOffset = (Func<Process, IntPtr, int, int, IntPtr>)((proc, ptr, offsetSize, remainingBytes) =>
-	{
-		byte[] offsetBytes;
-		if (ptr == IntPtr.Zero || !proc.ReadBytes(ptr, offsetSize, out offsetBytes))
-			return IntPtr.Zero;
-
-		int offset;
-		switch (offsetSize)
-		{
-			case 1:
-				offset = offsetBytes[0];
-				break;
-			case 2:
-				offset = BitConverter.ToInt16(offsetBytes, 0);
-				break;
-			case 4:
-				offset = BitConverter.ToInt32(offsetBytes, 0);
-				break;
-			default:
-				throw new Exception("Unsupported offset size");
-		}
-		return ptr + offsetSize + remainingBytes + offset;
-	});
-
 }
 
 init
@@ -176,9 +160,13 @@ init
 	);
 
 
-
+	// Find code address (+ 0x2, first int in SigScanTarget)
 	vars.levelIdCodeAddr = scanner.Scan(vars.levelIdCodeTarget);
+
+	// Read the address for levelID from code
 	vars.levelIdAddr = memory.ReadValue<int>((IntPtr)vars.levelIdCodeAddr);
+
+	// Read the value of that address
 	vars.levelId = new MemoryWatcher<byte>((IntPtr)vars.levelIdAddr);
 
 	vars.watchers.Clear();
