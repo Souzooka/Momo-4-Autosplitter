@@ -47,7 +47,7 @@ state("MomodoraRUtM", "v1.04d")
 {
 
 	// General
-	double cutseneProgress : 0x2300A48, 0x4, 0xAB0;
+/*	double cutseneProgress : 0x2300A48, 0x4, 0xAB0;*/
 	/*string6 versionId : 0x8E9899;*/
 
 	// depreciated
@@ -57,8 +57,8 @@ state("MomodoraRUtM", "v1.04d")
  	double difficultySelector : 0x22C17DC, 0xCB4, 0xC, 0x4, 0x41B0;
 
  	// For reset
- 	double inGame : 0x2300A48, 0x4, 0x780;
- 	double characterHP : 0x2300A48, 0x4, 0x0;
+/* 	double inGame : 0x2300A48, 0x4, 0x780;*/
+/* 	double characterHP : 0x2300A48, 0x4, 0x0;*/
 
  	// Edea split
  	double edeaDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0xE0;
@@ -140,6 +140,7 @@ startup
 
 init
 {
+
 	// Statistics
 	vars.hpLost = 0;
 
@@ -159,21 +160,59 @@ init
 		"E8 ?? ?? ?? ??"		// call 018C94F0
 	);
 
+	vars.flagsBaseAddrCodeTarget = new SigScanTarget(1,
+		"A1 ?? ?? ?? ??",			// mov eax,[02400A48] (MomodoraRUtM.exe+2300A48) ; base address we're looking for for flags/character/gamestatus pointer
+		"8B 40 04",					// mov eax,[eax+04]
+		"C7 44 24 10 ?? ?? ?? ??",	// mov [esp+10],00000000
+		"F2 ?? ?? 88 ?? ?? ?? ??",	// cvttsd2si ecx,[eax+00000660] ; what is this opcode even
+		"85 C9",					// test ecx,ecx
+		"7F 0C"						// jg 0013C1D2
+	);
 
-	// Find code address (+ 0x2, first int in SigScanTarget)
+
+	// Wait for the game to be loaded, otherwise scans will return 0
+	Thread.Sleep(2000);
+
+	// Find code address (+ 0x2 for levelId, first int in SigScanTarget)
 	vars.levelIdCodeAddr = scanner.Scan(vars.levelIdCodeTarget);
+	vars.flagsBaseAddrCodeAddr = scanner.Scan(vars.flagsBaseAddrCodeTarget);
 
 	// Read the address for levelID from code
 	vars.levelIdAddr = memory.ReadValue<int>((IntPtr)vars.levelIdCodeAddr);
+	vars.flagsBaseAddr = memory.ReadValue<int>((IntPtr)vars.flagsBaseAddrCodeAddr);
+
+	// offsets 0x4, 0x0 for character HP
+	// 0x4, 0x780 for inGame
+	// 0x4, 0xAB0 for cutsceneProgress
+	vars.hpPointerLevel1 = memory.ReadValue<int>((IntPtr)vars.flagsBaseAddr) + 0x4;
+
+	vars.characterHPAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x0;
+	vars.inGameAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x780;
+	vars.cutsceneProgressAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0xAB0;
+	print(vars.characterHPAddr.ToString("X"));
+
+
 
 	// Read the value of that address
 	vars.levelId = new MemoryWatcher<byte>((IntPtr)vars.levelIdAddr);
+	vars.characterHP = new MemoryWatcher<double>((IntPtr)vars.characterHPAddr);
+	vars.inGame = new MemoryWatcher<double>((IntPtr)vars.inGameAddr);
+	vars.cutsceneProgress = new MemoryWatcher<double>((IntPtr)vars.cutsceneProgressAddr);
 
 	vars.watchers.Clear();
 	vars.watchers.AddRange(new MemoryWatcher[]
 	{
-		vars.levelId
+		vars.levelId,
+		vars.characterHP,
+		vars.inGame,
+		vars.cutsceneProgress
 	});
+
+
+
+
+
+
 
 
 }
@@ -181,7 +220,7 @@ init
 update
 {
 	// Save run data. REQUIRES ADMIN RIGHTS!
-	if (settings["saveRunData"] && vars.levelId.Current == 232 && old.cutseneProgress != 1000 && current.cutseneProgress == 1000) {
+	if (settings["saveRunData"] && vars.levelId.Current == 232 && vars.cutsceneProgress.Old != 1000 && vars.cutsceneProgress.Current == 1000) {
 		if (!System.IO.Directory.Exists("MomodoraRUtM")) {
 			System.IO.Directory.CreateDirectory("MomodoraRUtM");
 		}
@@ -207,14 +246,14 @@ update
 		vars.hpLost = 0;
 	}
 
-	if (current.characterHP < old.characterHP && current.inGame == 1) {
-		vars.hpLost += (old.characterHP - current.characterHP);
+	if (vars.characterHP.Current < vars.characterHP.Old && vars.inGame.Current == 1) {
+		vars.hpLost += (vars.characterHP.Old - vars.characterHP.Current);
 	}
 
 	vars.watchers.UpdateAll(game);
 
 	// DEBUG
-	/*print(vars.levelId.Current.ToString());*/
+	/*print(vars.characterHP.Current.ToString());*/
 }
 
 start
@@ -234,7 +273,7 @@ reset
 	// under normal circumstances, when dead characterHP is 0
 	// characterHP is set to 30 when returning to the title menu
 	// if this *still* causes trouble we should rewrite it to check levelId
-	if (current.inGame == 0 && old.inGame == 1 && current.characterHP == 30) {
+	if (vars.inGame.Current == 0 && vars.inGame.Old == 1 && vars.characterHP.Current == 30) {
 		print("reset returned true!");
 		return true;
 	}
@@ -245,10 +284,10 @@ split
 
 
 	// various flags are set during or at the beginning of boss fights, which is why we use cutsceneProgress trickery.
-	// old.inGame is to prevent splits upon loading a save.
+	// vars.inGame.Old is to prevent splits upon loading a save.
 
 	// Edea
-	if (settings["edea"] && old.edeaDefeated == 0 && current.edeaDefeated == 1 && old.inGame == 1) {
+	if (settings["edea"] && old.edeaDefeated == 0 && current.edeaDefeated == 1 && vars.inGame.Old == 1) {
 		print("Edea defeated!");
 		return true;
 	}
@@ -259,43 +298,43 @@ split
 		return true;
 	}
 	// Frida
-	if (settings["frida"] && vars.levelId.Current == 141 && current.cutseneProgress == 0 && old.cutseneProgress == 500) {
+	if (settings["frida"] && vars.levelId.Current == 141 && vars.cutsceneProgress.Current == 0 && vars.cutsceneProgress.Old == 500) {
 		print("Frida defeated!");
 		return true;
 	}
 	// Lubella 2
-	if (settings["lubella2"] && current.cutseneProgress == 0 && old.cutseneProgress == 500 && vars.levelId.Current == 147) {
+	if (settings["lubella2"] && vars.cutsceneProgress.Current == 0 && vars.cutsceneProgress.Old == 500 && vars.levelId.Current == 147) {
 		print("Lubella 2 defeated!");
 		return true;
 	}
 	// Arsonist
-	if (settings["arsonist"] && current.arsonistDefeated == 1 && old.arsonistDefeated == 0 && old.inGame == 1) {
+	if (settings["arsonist"] && current.arsonistDefeated == 1 && old.arsonistDefeated == 0 && vars.inGame.Old == 1) {
 		print("Arsonist defeated!");
 		return true;
 	}
 	// Fennel - SPLITS AT END OF CUTSCENE, WILL PROBABLY CHANGE LOGIC LATER
-	if (settings["fennel"] && old.fennelDefeated == 0 && current.fennelDefeated == 1 && old.inGame == 1) {
+	if (settings["fennel"] && old.fennelDefeated == 0 && current.fennelDefeated == 1 && vars.inGame.Old == 1) {
 		print("Fennel defeated!");
 		return true;
 	}
 	// Lupiar & Magnolia - Splits when talking to Magnolia
-	if (settings["magnolia"] && old.magnoliaDefeated == 0 && current.magnoliaDefeated == 1 && old.inGame == 1) {
+	if (settings["magnolia"] && old.magnoliaDefeated == 0 && current.magnoliaDefeated == 1 && vars.inGame.Old == 1) {
 		print("Magnolia defeated!");
 		return true;
 	}
 	// Clone Angel
-	if (settings["cloneAngel"] && old.cloneAngelDefeated == 0 && current.cloneAngelDefeated == 1 && old.inGame == 1) {
+	if (settings["cloneAngel"] && old.cloneAngelDefeated == 0 && current.cloneAngelDefeated == 1 && vars.inGame.Old == 1) {
 		print("Clone Angel defeated!");
 		return true;
 	}
 	// Queen
-	if (settings["queen"] && !settings["100%Check"] && vars.levelId.Current == 232 && old.cutseneProgress != 1000 && current.cutseneProgress == 1000) {
+	if (settings["queen"] && !settings["100%Check"] && vars.levelId.Current == 232 && vars.cutsceneProgress.Old != 1000 && vars.cutsceneProgress.Current == 1000) {
 		print("Queen defeated!");
 		return true;
 	}
 
 	// Queen 100%
-	if (settings["queen"] && settings["100%Check"] && vars.levelId.Current == 232 && old.cutseneProgress != 1000 && current.cutseneProgress == 1000) {
+	if (settings["queen"] && settings["100%Check"] && vars.levelId.Current == 232 && vars.cutsceneProgress.Old != 1000 && vars.cutsceneProgress.Current == 1000) {
 		print("Checking 100% conditions:");
 		print("Has Choir been defeated?: " + Convert.ToBoolean(current.choirDefeated));
 		print("Bug ivories collected: " + current.ivoryBugs + "/20.");
@@ -306,25 +345,30 @@ split
 	}
 
 	// Choir
-	if (settings["choir"] && current.choirDefeated == 1 && old.choirDefeated == 0 && old.inGame == 1) {
+	if (settings["choir"] && current.choirDefeated == 1 && old.choirDefeated == 0 && vars.inGame.Old == 1) {
 		vars.choirDefeated = 1;
 		print("Choir defeated!");
 		return true;
 	}
 
 	// Warpstone
-	if (settings["warpFragment"] && old.warpStone == 0 && current.warpStone == 1 && old.inGame == 1) {
+	if (settings["warpFragment"] && old.warpStone == 0 && current.warpStone == 1 && vars.inGame.Old == 1) {
 		print("Warp fragment obtained!");
 		return true;
 	}
 	// Monastery key
-	if (settings["monasteryKey"] && old.monasteryKey == 0 && current.monasteryKey == 1 && old.inGame == 1) {
+	if (settings["monasteryKey"] && old.monasteryKey == 0 && current.monasteryKey == 1 && vars.inGame.Old == 1) {
 		print("Monastery key obtained!");
 		return true;
 	}
 	// Fresh Spring Leaf
-	if (settings["freshSpringLeaf"] && old.freshSpringLeaf == 0 && current.freshSpringLeaf == 1 && old.inGame == 1) {
+	if (settings["freshSpringLeaf"] && old.freshSpringLeaf == 0 && current.freshSpringLeaf == 1 && vars.inGame.Old == 1) {
 		print("Fresh Spring Leaf obtained!");
 		return true;
 	}
+}
+
+exit
+{
+	vars.watchers.Clear();
 }
