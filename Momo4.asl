@@ -126,14 +126,6 @@ startup
 
 init
 {
-	// Debug
-	print("modules.First().ModuleMemorySize == " + "0x" + modules.First().ModuleMemorySize.ToString("X8"));
-	/*print(current.versionId);*/
-
-	if (modules.First().ModuleMemorySize == 0x25D6000) {
-		version = "v1.04d";
-	}
-
 	// Statistics
 	vars.hpLost = 0;
 }
@@ -174,6 +166,8 @@ update
 
 start
 {
+	// If we were in the difficulty menu and then left it
+	// this value is preserved if we return to title menu
 	if (old.difficultySelector > 0 && current.difficultySelector == 0) {
 		print("start returned true!");
 		return true;
@@ -182,6 +176,11 @@ start
 
 reset
 {
+	// inGame could be set to 0 when respawning after a death
+	// to prevent this tripping we check that characterHP is 30
+	// under normal circumstances, when dead characterHP is 0
+	// characterHP is set to 30 when returning to the title menu
+	// if this *still* causes trouble we should rewrite it to check levelId
 	if (current.inGame == 0 && old.inGame == 1 && current.characterHP == 30) {
 		print("reset returned true!");
 		return true;
