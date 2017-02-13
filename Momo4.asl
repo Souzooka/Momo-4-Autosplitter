@@ -126,6 +126,8 @@ startup
 
 	// AOB SCANS //
 
+	vars.watchers = new MemoryWatcherList();
+
 	vars.ReadOffset = (Func<Process, IntPtr, int, int, IntPtr>)((proc, ptr, offsetSize, remainingBytes) =>
 	{
 		byte[] offsetBytes;
@@ -159,20 +161,39 @@ init
 
 	// AOB SCANS //
 
-	foreach (var page in memory.MemoryPages()) {
-		var bytes = memory.ReadBytes(page.BaseAddress, (int)page.RegionSize);
-		if (bytes == null) {
-			continue;
-		}
-		var scanner = new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize);
-		/*vars.killsCodeAddr = scanner.Scan(vars.killsTarget); */
-	}
+	var module = modules.First();
+	var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
+
+	vars.levelIdCodeTarget = new SigScanTarget(2,
+		"89 35 ?? ?? ?? ??", 	// mov [035AAF00],esi ; destination is levelId address, other code that follows is only for the purposes of finding a unique match
+		"7D 0B",				// jnl 018CAB1A
+		"8B 15 ?? ?? ?? ??",	// mov edx,[035AAF64]
+		"8B 04 B2",				// mov eax,[edx+esi*4]
+		"EB 02",				// jmp 018CAB1C
+		"33 C0",				// xor eax,eax
+		"50",					// push eax
+		"E8 ?? ?? ?? ??"		// call 018C94F0
+	);
+
+
+
+	vars.levelIdCodeAddr = scanner.Scan(vars.levelIdCodeTarget);
+	vars.levelIdAddr = memory.ReadValue<int>((IntPtr)vars.levelIdCodeAddr);
+	vars.levelId = new MemoryWatcher<byte>((IntPtr)vars.levelIdAddr);
+
+	vars.watchers.Clear();
+	vars.watchers.AddRange(new MemoryWatcher[]
+	{
+		vars.levelId
+	});
+
+
 }
 
 update
 {
 	// Save run data. REQUIRES ADMIN RIGHTS!
-	if (settings["saveRunData"] && current.levelId == 232 && old.cutseneProgress != 1000 && current.cutseneProgress == 1000) {
+	if (settings["saveRunData"] && vars.levelId.Current == 232 && old.cutseneProgress != 1000 && current.cutseneProgress == 1000) {
 		if (!System.IO.Directory.Exists("MomodoraRUtM")) {
 			System.IO.Directory.CreateDirectory("MomodoraRUtM");
 		}
@@ -201,6 +222,11 @@ update
 	if (current.characterHP < old.characterHP && current.inGame == 1) {
 		vars.hpLost += (old.characterHP - current.characterHP);
 	}
+
+	vars.watchers.UpdateAll(game);
+
+	// DEBUG
+	/*print(vars.levelId.Current.ToString());*/
 }
 
 start
@@ -245,12 +271,12 @@ split
 		return true;
 	}
 	// Frida
-	if (settings["frida"] && current.levelId == 141 && current.cutseneProgress == 0 && old.cutseneProgress == 500) {
+	if (settings["frida"] && vars.levelId.Current == 141 && current.cutseneProgress == 0 && old.cutseneProgress == 500) {
 		print("Frida defeated!");
 		return true;
 	}
 	// Lubella 2
-	if (settings["lubella2"] && current.cutseneProgress == 0 && old.cutseneProgress == 500 && current.levelId == 147) {
+	if (settings["lubella2"] && current.cutseneProgress == 0 && old.cutseneProgress == 500 && vars.levelId.Current == 147) {
 		print("Lubella 2 defeated!");
 		return true;
 	}
@@ -275,13 +301,13 @@ split
 		return true;
 	}
 	// Queen
-	if (settings["queen"] && !settings["100%Check"] && current.levelId == 232 && old.cutseneProgress != 1000 && current.cutseneProgress == 1000) {
+	if (settings["queen"] && !settings["100%Check"] && vars.levelId.Current == 232 && old.cutseneProgress != 1000 && current.cutseneProgress == 1000) {
 		print("Queen defeated!");
 		return true;
 	}
 
 	// Queen 100%
-	if (settings["queen"] && settings["100%Check"] && current.levelId == 232 && old.cutseneProgress != 1000 && current.cutseneProgress == 1000) {
+	if (settings["queen"] && settings["100%Check"] && vars.levelId.Current == 232 && old.cutseneProgress != 1000 && current.cutseneProgress == 1000) {
 		print("Checking 100% conditions:");
 		print("Has Choir been defeated?: " + Convert.ToBoolean(current.choirDefeated));
 		print("Bug ivories collected: " + current.ivoryBugs + "/20.");
