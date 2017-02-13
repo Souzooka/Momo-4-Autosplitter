@@ -197,6 +197,7 @@ init
 	// * monasteryKey: 0x260
 	// * fennelDefeated: 0x3D0
 	// * magnoliaDefeated: 0x660
+	// * freshSpringLeaf: 0x600
 	// * cloneAngelDefeated: 0x640
 	// * choirDefeated: 0x6A0
 	// * ivoryBugs: 0x3C0
@@ -212,6 +213,7 @@ init
 	vars.monasteryKeyAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x260;
 	vars.fennelDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x3D0;
 	vars.magnoliaDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x660;
+	vars.freshSpringLeafAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x660;
 	vars.cloneAngelDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x640;
 	vars.choirDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x6A0;
 	vars.ivoryBugsAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x3C0;
@@ -232,6 +234,7 @@ init
 	vars.monasteryKey = new MemoryWatcher<double>((IntPtr)vars.monasteryKeyAddr);
 	vars.fennelDefeated = new MemoryWatcher<double>((IntPtr)vars.fennelDefeatedAddr);
 	vars.magnoliaDefeated = new MemoryWatcher<double>((IntPtr)vars.magnoliaDefeatedAddr);
+	vars.freshSpringLeaf = new MemoryWatcher<double>((IntPtr)vars.freshSpringLeafAddr);
 	vars.cloneAngelDefeated = new MemoryWatcher<double>((IntPtr)vars.cloneAngelDefeatedAddr);
 	vars.choirDefeated = new MemoryWatcher<double>((IntPtr)vars.choirDefeatedAddr);
 	vars.ivoryBugs = new MemoryWatcher<double>((IntPtr)vars.ivoryBugsAddr);
@@ -337,7 +340,7 @@ split
 	// vars.inGame.Old is to prevent splits upon loading a save.
 
 	// Edea
-	if (settings["edea"] && old.edeaDefeated == 0 && current.edeaDefeated == 1 && vars.inGame.Old == 1) {
+	if (settings["edea"] && vars.edeaDefeated.Old == 0 && vars.edeaDefeated.Current == 1 && vars.inGame.Old == 1) {
 		print("Edea defeated!");
 		return true;
 	}
@@ -358,22 +361,22 @@ split
 		return true;
 	}
 	// Arsonist
-	if (settings["arsonist"] && current.arsonistDefeated == 1 && old.arsonistDefeated == 0 && vars.inGame.Old == 1) {
+	if (settings["arsonist"] && vars.arsonistDefeated.Old == 0 && vars.arsonistDefeated.Current == 1 && vars.inGame.Old == 1) {
 		print("Arsonist defeated!");
 		return true;
 	}
 	// Fennel - SPLITS AT END OF CUTSCENE, WILL PROBABLY CHANGE LOGIC LATER
-	if (settings["fennel"] && old.fennelDefeated == 0 && current.fennelDefeated == 1 && vars.inGame.Old == 1) {
+	if (settings["fennel"] && vars.fennelDefeated.Old == 0 && vars.fennelDefeated.Current == 1 && vars.inGame.Old == 1) {
 		print("Fennel defeated!");
 		return true;
 	}
 	// Lupiar & Magnolia - Splits when talking to Magnolia
-	if (settings["magnolia"] && old.magnoliaDefeated == 0 && current.magnoliaDefeated == 1 && vars.inGame.Old == 1) {
+	if (settings["magnolia"] && vars.magnoliaDefeated.Old == 0 && vars.magnoliaDefeated.Current == 1 && vars.inGame.Old == 1) {
 		print("Magnolia defeated!");
 		return true;
 	}
 	// Clone Angel
-	if (settings["cloneAngel"] && old.cloneAngelDefeated == 0 && current.cloneAngelDefeated == 1 && vars.inGame.Old == 1) {
+	if (settings["cloneAngel"] && vars.cloneAngelDefeated.Old == 0 && vars.cloneAngelDefeated.Current == 1 && vars.inGame.Old == 1) {
 		print("Clone Angel defeated!");
 		return true;
 	}
@@ -395,24 +398,24 @@ split
 	}
 
 	// Choir
-	if (settings["choir"] && current.choirDefeated == 1 && old.choirDefeated == 0 && vars.inGame.Old == 1) {
+	if (settings["choir"] && vars.choirDefeated.Old == 0 && vars.choirDefeated.Current == 1 && vars.inGame.Old == 1) {
 		vars.choirDefeated = 1;
 		print("Choir defeated!");
 		return true;
 	}
 
 	// Warpstone
-	if (settings["warpFragment"] && old.warpStone == 0 && current.warpStone == 1 && vars.inGame.Old == 1) {
+	if (settings["warpFragment"] && vars.warpStone.Old == 0 && vars.warpStone.Current == 1 && vars.inGame.Old == 1) {
 		print("Warp fragment obtained!");
 		return true;
 	}
 	// Monastery key
-	if (settings["monasteryKey"] && old.monasteryKey == 0 && current.monasteryKey == 1 && vars.inGame.Old == 1) {
+	if (settings["monasteryKey"] && vars.monasteryKey.Old == 0 && vars.monasteryKey.Current == 1 && vars.inGame.Old == 1) {
 		print("Monastery key obtained!");
 		return true;
 	}
 	// Fresh Spring Leaf
-	if (settings["freshSpringLeaf"] && old.freshSpringLeaf == 0 && current.freshSpringLeaf == 1 && vars.inGame.Old == 1) {
+	if (settings["freshSpringLeaf"] && vars.freshSpringLeaf.Old == 0 && vars.freshSpringLeaf.Current == 1 && vars.inGame.Old == 1) {
 		print("Fresh Spring Leaf obtained!");
 		return true;
 	}
