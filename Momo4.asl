@@ -44,9 +44,7 @@ startup
 	// SETTINGS END //
 
 	// AOB SCANS //
-
 	vars.watchers = new MemoryWatcherList();
-
 }
 
 init
@@ -80,27 +78,22 @@ init
 		"7F 0C"						// jg 0013C1D2
 	);
 
-
 	// Wait for the game to be loaded, otherwise scans will return 0
-	Thread.Sleep(2000);
+	Thread.Sleep(4000);
 
 	// Find code address (+ 0x2 for levelId, first int in SigScanTarget)
 	vars.levelIdCodeAddr = scanner.Scan(vars.levelIdCodeTarget);
 	vars.flagsBaseAddrCodeAddr = scanner.Scan(vars.flagsBaseAddrCodeTarget);
-	
 
 	// Read the address for levelID from code
 	vars.levelIdAddr = memory.ReadValue<int>((IntPtr)vars.levelIdCodeAddr);
 	vars.flagsBaseAddr = memory.ReadValue<int>((IntPtr)vars.flagsBaseAddrCodeAddr);
-
 
 	// offsets 0x4, 0x0 for character HP
 	// 0x4, 0x780 for inGame
 	// 0x4, 0xAB0 for cutsceneProgress
 	vars.hpPointerLevel1 = memory.ReadValue<int>((IntPtr)vars.flagsBaseAddr) + 0x4;
 	vars.flagsPointerLevel1 = vars.hpPointerLevel1;
-
-	
 
 	vars.characterHPAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x0;
 	vars.inGameAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x780;
@@ -155,8 +148,6 @@ init
 	vars.vitalityFragments = new MemoryWatcher<double>((IntPtr)vars.vitalityFragmentsAddr);
 	vars.enemiesKilled = new MemoryWatcher<double>((IntPtr)vars.enemiesKilledAddr);
 	
-
-
 	vars.watchers.Clear();
 	vars.watchers.AddRange(new MemoryWatcher[]
 	{
@@ -176,13 +167,6 @@ init
 		vars.vitalityFragments,
 		vars.enemiesKilled,
 	});
-
-
-
-
-
-
-
 
 }
 
@@ -215,9 +199,12 @@ update
 		vars.hpLost = 0;
 	}
 
+	// for statistics file
 	if (vars.characterHP.Current < vars.characterHP.Old && vars.inGame.Current == 1) {
 		vars.hpLost += (vars.characterHP.Old - vars.characterHP.Current);
 	}
+	// statistics end
+	// save run data end
 
 	vars.watchers.UpdateAll(game);
 
@@ -253,9 +240,6 @@ update
 		});
 
 	}
-
-	// DEBUG
-	/*print(vars.characterHP.Current.ToString());*/
 }
 
 start
@@ -277,9 +261,6 @@ reset
 	// if this *still* causes trouble we should rewrite it to check levelId
 	if (vars.inGame.Current == 0 && vars.inGame.Old == 1 && vars.characterHP.Current == 30) {
 		print("reset returned true!");
-
-		
-
 		return true;
 	}
 }
@@ -341,10 +322,10 @@ split
 	// Queen 100%
 	if (settings["queen"] && settings["100%Check"] && vars.levelId.Current == 232 && vars.cutsceneProgress.Old != 1000 && vars.cutsceneProgress.Current == 1000) {
 		print("Checking 100% conditions:");
-		print("Has Choir been defeated?: " + Convert.ToBoolean(current.choirDefeated));
-		print("Bug ivories collected: " + current.ivoryBugs + "/20.");
-		print("Vitality fragments collected: " + current.vitalityFragments + "/17.");
-		if (current.choirDefeated == 1 && current.ivoryBugs == 20 && current.vitalityFragments == 17) {
+		print("Has Choir been defeated?: " + Convert.ToBoolean(vars.choirDefeated.Current));
+		print("Bug ivories collected: " + vars.ivoryBugs.Current + "/20.");
+		print("Vitality fragments collected: " + vars.vitalityFragments.Current + "/17.");
+		if (vars.choirDefeated.Current == 1 && vars.ivoryBugs.Current == 20 && vars.vitalityFragments.Current == 17) {
 			return true;
 		}
 	}
@@ -371,9 +352,4 @@ split
 		print("Fresh Spring Leaf obtained!");
 		return true;
 	}
-}
-
-exit
-{
-	vars.watchers.Clear();
 }
