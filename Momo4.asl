@@ -189,7 +189,34 @@ init
 	vars.characterHPAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x0;
 	vars.inGameAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x780;
 	vars.cutsceneProgressAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0xAB0;
-	print(vars.characterHPAddr.ToString("X"));
+
+	// Offset 0x4 (from hpPointerLevel1), 0x60, 0x4, 0x4, 0xXXX
+	// * edeaDefeated: 0xE0
+	// * arsonistDefeated: 0x9E0
+	// * warpStone: 0x5C0
+	// * monasteryKey: 0x260
+	// * fennelDefeated: 0x3D0
+	// * magnoliaDefeated: 0x660
+	// * cloneAngelDefeated: 0x640
+	// * choirDefeated: 0x6A0
+	// * ivoryBugs: 0x3C0
+	// * vitalityFragments: 0xAE0
+	// * enemiesKilled: 0x490
+	vars.flagsPointerLevel2 = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x60;
+	vars.flagsPointerLevel3 = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel2) + 0x4;
+	vars.flagsPointerLevel4 = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel3) + 0x4;
+
+	vars.edeaDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0xE0;
+	vars.arsonistDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x9E0;
+	vars.warpStoneAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x5C0;
+	vars.monasteryKeyAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x260;
+	vars.fennelDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x3D0;
+	vars.magnoliaDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x660;
+	vars.cloneAngelDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x640;
+	vars.choirDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x6A0;
+	vars.ivoryBugsAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x3C0;
+	vars.vitalityFragmentsAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0xAE0;
+	vars.enemiesKilledAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x490;
 
 
 
@@ -199,13 +226,36 @@ init
 	vars.inGame = new MemoryWatcher<double>((IntPtr)vars.inGameAddr);
 	vars.cutsceneProgress = new MemoryWatcher<double>((IntPtr)vars.cutsceneProgressAddr);
 
+	vars.edeaDefeated = new MemoryWatcher<double>((IntPtr)vars.edeaDefeatedAddr);
+	vars.arsonistDefeated = new MemoryWatcher<double>((IntPtr)vars.arsonistDefeatedAddr);
+	vars.warpStone = new MemoryWatcher<double>((IntPtr)vars.warpStoneAddr);
+	vars.monasteryKey = new MemoryWatcher<double>((IntPtr)vars.monasteryKeyAddr);
+	vars.fennelDefeated = new MemoryWatcher<double>((IntPtr)vars.fennelDefeatedAddr);
+	vars.magnoliaDefeated = new MemoryWatcher<double>((IntPtr)vars.magnoliaDefeatedAddr);
+	vars.cloneAngelDefeated = new MemoryWatcher<double>((IntPtr)vars.cloneAngelDefeatedAddr);
+	vars.choirDefeated = new MemoryWatcher<double>((IntPtr)vars.choirDefeatedAddr);
+	vars.ivoryBugs = new MemoryWatcher<double>((IntPtr)vars.ivoryBugsAddr);
+	vars.vitalityFragments = new MemoryWatcher<double>((IntPtr)vars.vitalityFragmentsAddr);
+	vars.enemiesKilled = new MemoryWatcher<double>((IntPtr)vars.enemiesKilledAddr);
+
 	vars.watchers.Clear();
 	vars.watchers.AddRange(new MemoryWatcher[]
 	{
 		vars.levelId,
 		vars.characterHP,
 		vars.inGame,
-		vars.cutsceneProgress
+		vars.cutsceneProgress,
+		vars.edeaDefeated,
+		vars.arsonistDefeated,
+		vars.warpStone,
+		vars.monasteryKey,
+		vars.fennelDefeated,
+		vars.magnoliaDefeated,
+		vars.cloneAngelDefeated,
+		vars.choirDefeated,
+		vars.ivoryBugs,
+		vars.vitalityFragments,
+		vars.enemiesKilled
 	});
 
 
