@@ -99,6 +99,7 @@ state("MomodoraRUtM", "v1.04d")
 
 startup
 {
+	// SETTINGS START //
 	settings.Add("saveRunData", false, "Save Run Data");
 	settings.Add("100%Check", false, "100% Run");
 	settings.Add("splits", true, "All Splits");
@@ -121,6 +122,33 @@ startup
 	settings.SetToolTip("100%Check", "If checked, will only split for Queen if Choir is defeated, 17 vitality fragments were obtained, and 20 bug ivories were collected.");
 
 	print("Hey, this compiled correctly. Way to go!");
+	// SETTINGS END //
+
+	// AOB SCANS //
+
+	vars.ReadOffset = (Func<Process, IntPtr, int, int, IntPtr>)((proc, ptr, offsetSize, remainingBytes) =>
+	{
+		byte[] offsetBytes;
+		if (ptr == IntPtr.Zero || !proc.ReadBytes(ptr, offsetSize, out offsetBytes))
+			return IntPtr.Zero;
+
+		int offset;
+		switch (offsetSize)
+		{
+			case 1:
+				offset = offsetBytes[0];
+				break;
+			case 2:
+				offset = BitConverter.ToInt16(offsetBytes, 0);
+				break;
+			case 4:
+				offset = BitConverter.ToInt32(offsetBytes, 0);
+				break;
+			default:
+				throw new Exception("Unsupported offset size");
+		}
+		return ptr + offsetSize + remainingBytes + offset;
+	});
 
 }
 
@@ -128,6 +156,17 @@ init
 {
 	// Statistics
 	vars.hpLost = 0;
+
+	// AOB SCANS //
+
+	foreach (var page in memory.MemoryPages()) {
+		var bytes = memory.ReadBytes(page.BaseAddress, (int)page.RegionSize);
+		if (bytes == null) {
+			continue;
+		}
+		var scanner = new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize);
+		/*vars.killsCodeAddr = scanner.Scan(vars.killsTarget); */
+	}
 }
 
 update
