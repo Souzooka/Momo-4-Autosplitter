@@ -2,107 +2,18 @@
 // Futureproofing info
 // This game seems to be updated frequently, so we need to set up some aobscans ASAP
 
-// TODO
-// Flags' addresses are accessed by adding a base address to an offset in eax (I think it's eax anyways). The flags are all doubles.
-// * edeaDefeated: 0xE0
-// * arsonistDefeated: 0x9E0
-// * warpStone: 0x5C0
-// * monasteryKey: 0x260
-// * fennelDefeated: 0x3D0
-// * magnoliaDefeated: 0x660
-// * cloneAngelDefeated: 0x640
-// * choirDefeated: 0x6A0
-// * ivoryBugs: 0x3C0
-// * vitalityFragments: 0xAE0
-// * enemiesKilled: 0x490
-
-// NOTE: Note that the queen doesn't have a flag. This makes sense since the game immediately ends after she is defeated.
-// Some flags are unpractical to use, and so there is likely a better way to check if bosses are defeated if we can point to HP and use levelId, which transitions to the next point.
-
 // TODO: Find a solid health pointer -- if Edea bleeds before she's active, then there is a pointer, even if we have trouble finding it.
 // *Do not use 0, 0, 4, 230*
 // We might be able to make our own pointer using an aobscan for code that changes boss HP
 // Bosses die at <= 11 HP
 
-// DONE!
-// levelId is 1 at title, 11 in save, 21 in first room -- it is a byte
-//
-
-// TODO
-// difficultySelector needs to be used for best start timing, it's 1 when looking at easy, 2 for normal, 3 for hard, 4 for insane, and 0 otherwise.
-
-// TODO
-// even if a universal HP can't be found, since it's found off of charHP we can still use cutsceneProgress
-// cutsceneProgress is a misnomer, I'm not sure how this changes but it is consistent and stable.
-
-// TODO
-// find aobscan for characterHP being changed
-// offsets from characterHP address:
-// * characterHP: 0x0
-// * inGame: 0x780
-// * cutsceneProgress: 0xAB0
-
+// Note: Livesplit will throw out errors until the difficulty menu is opened
 
 state("MomodoraRUtM", "v1.04d")
 {
-
-	// General
-/*	double cutseneProgress : 0x2300A48, 0x4, 0xAB0;*/
-	/*string6 versionId : 0x8E9899;*/
-
-	// depreciated
-	/*byte levelId : "MomodoraRUtM.exe", 0x230AF00;*/
-
-	// For start
- 	double difficultySelector : 0x22C17DC, 0xCB4, 0xC, 0x4, 0x41B0;
-
- 	// For reset
-/* 	double inGame : 0x2300A48, 0x4, 0x780;*/
-/* 	double characterHP : 0x2300A48, 0x4, 0x0;*/
-
-/* 	// Edea split
- 	double edeaDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0xE0;*/
-
  	// Lubella 1 split
  	double lubella1HP : 0x230D0EC, 0x8, 0x140, 0x4, 0x230;
  	double lubella1HPMax : 0x230D0EC, 0x8, 0x140, 0x4, 0x240;
-
- 	// Frida split
- 	// see cutsceneProgress
-
-/* 	// Arsonist split
- 	double arsonistDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x9E0;
-
- 	// Warpstone
- 	double warpStone : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x5C0;
-
- 	// Monastery Key
- 	double monasteryKey : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x260;
-
- 	// Fennel
- 	double fennelDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x3D0;
-
-  	// Lupiar and Magnolia
- 	double magnoliaDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x660;
-
- 	// Fresh Spring Leaf
- 	double freshSpringLeaf : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x600;
-
- 	// Clone Angel
- 	double cloneAngelDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x640;
-
- 	// Queen
- 	// see cutsceneProgress
-
- 	// Choir
- 	double choirDefeated : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x6A0;
-
- 	// 100%
- 	double ivoryBugs : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x3C0;
- 	double vitalityFragments : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0xAE0;
-
- 	// Statistics
- 	double enemiesKilled : 0x2300A48, 0x4, 0x60, 0x4, 0x4, 0x490;*/
 }
 
 startup
@@ -176,15 +87,20 @@ init
 	// Find code address (+ 0x2 for levelId, first int in SigScanTarget)
 	vars.levelIdCodeAddr = scanner.Scan(vars.levelIdCodeTarget);
 	vars.flagsBaseAddrCodeAddr = scanner.Scan(vars.flagsBaseAddrCodeTarget);
+	
 
 	// Read the address for levelID from code
 	vars.levelIdAddr = memory.ReadValue<int>((IntPtr)vars.levelIdCodeAddr);
 	vars.flagsBaseAddr = memory.ReadValue<int>((IntPtr)vars.flagsBaseAddrCodeAddr);
 
+
 	// offsets 0x4, 0x0 for character HP
 	// 0x4, 0x780 for inGame
 	// 0x4, 0xAB0 for cutsceneProgress
 	vars.hpPointerLevel1 = memory.ReadValue<int>((IntPtr)vars.flagsBaseAddr) + 0x4;
+	vars.flagsPointerLevel1 = vars.hpPointerLevel1;
+
+	
 
 	vars.characterHPAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x0;
 	vars.inGameAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x780;
@@ -203,10 +119,11 @@ init
 	// * ivoryBugs: 0x3C0
 	// * vitalityFragments: 0xAE0
 	// * enemiesKilled: 0x490
-	vars.flagsPointerLevel2 = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x60;
+	vars.flagsPointerLevel2 = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel1) + 0x60;
 	vars.flagsPointerLevel3 = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel2) + 0x4;
 	vars.flagsPointerLevel4 = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel3) + 0x4;
 
+	// Flags
 	vars.edeaDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0xE0;
 	vars.arsonistDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x9E0;
 	vars.warpStoneAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x5C0;
@@ -220,14 +137,11 @@ init
 	vars.vitalityFragmentsAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0xAE0;
 	vars.enemiesKilledAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x490;
 
-
-
-	// Read the value of that address
+	// Read the value of these addresses
 	vars.levelId = new MemoryWatcher<byte>((IntPtr)vars.levelIdAddr);
 	vars.characterHP = new MemoryWatcher<double>((IntPtr)vars.characterHPAddr);
 	vars.inGame = new MemoryWatcher<double>((IntPtr)vars.inGameAddr);
 	vars.cutsceneProgress = new MemoryWatcher<double>((IntPtr)vars.cutsceneProgressAddr);
-
 	vars.edeaDefeated = new MemoryWatcher<double>((IntPtr)vars.edeaDefeatedAddr);
 	vars.arsonistDefeated = new MemoryWatcher<double>((IntPtr)vars.arsonistDefeatedAddr);
 	vars.warpStone = new MemoryWatcher<double>((IntPtr)vars.warpStoneAddr);
@@ -240,6 +154,8 @@ init
 	vars.ivoryBugs = new MemoryWatcher<double>((IntPtr)vars.ivoryBugsAddr);
 	vars.vitalityFragments = new MemoryWatcher<double>((IntPtr)vars.vitalityFragmentsAddr);
 	vars.enemiesKilled = new MemoryWatcher<double>((IntPtr)vars.enemiesKilledAddr);
+	
+
 
 	vars.watchers.Clear();
 	vars.watchers.AddRange(new MemoryWatcher[]
@@ -258,7 +174,7 @@ init
 		vars.choirDefeated,
 		vars.ivoryBugs,
 		vars.vitalityFragments,
-		vars.enemiesKilled
+		vars.enemiesKilled,
 	});
 
 
@@ -305,6 +221,39 @@ update
 
 	vars.watchers.UpdateAll(game);
 
+	// addresses for difficultySelector change when we leave the game, so rescan for difficultySelector when entering difficulty menu
+	if (vars.levelId.Current == 11 && vars.levelId.Old != 11) {
+
+		var module = modules.First();
+		var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
+
+		vars.difficultySelectorBaseAddrCodeTarget = new SigScanTarget(2,
+			"8B 15 ?? ?? ?? ??",	// mov edx,[035C17DC] ; base address
+			"23 C1",				// and eax,eax
+			"8B 04 C2",				// mov eax,[edx+eax*8]
+			"85 C0",				// test eax,eax
+			"74 10",				// je 018A595C
+			"8D 64 24 00",			// esp,[esp+00]
+			"39 48 08",				// cmp [eax+08],ecx
+			"74 0A"					// je 018A595F
+		);
+
+		vars.difficultySelectorBaseAddrCodeAddr = scanner.Scan(vars.difficultySelectorBaseAddrCodeTarget);
+		vars.difficultySelectorBaseAddr = memory.ReadValue<int>((IntPtr)vars.difficultySelectorBaseAddrCodeAddr);
+		vars.difficultySelectorPointerLevel1 = memory.ReadValue<int>((IntPtr)vars.difficultySelectorBaseAddr) + 0xCB4;
+		vars.difficultySelectorPointerLevel2 = memory.ReadValue<int>((IntPtr)vars.difficultySelectorPointerLevel1) + 0xC;
+		vars.difficultySelectorPointerLevel3 = memory.ReadValue<int>((IntPtr)vars.difficultySelectorPointerLevel2) + 0x4;
+		vars.difficultySelectorAddr = memory.ReadValue<int>((IntPtr)vars.difficultySelectorPointerLevel3) + 0x41B0;
+		print(vars.difficultySelectorAddr.ToString("X"));
+
+		vars.difficultySelector = new MemoryWatcher<double>((IntPtr)vars.difficultySelectorAddr);
+		vars.watchers.AddRange(new MemoryWatcher[]
+		{
+			vars.difficultySelector
+		});
+
+	}
+
 	// DEBUG
 	/*print(vars.characterHP.Current.ToString());*/
 }
@@ -313,7 +262,7 @@ start
 {
 	// If we were in the difficulty menu and then left it
 	// this value is preserved if we return to title menu
-	if (old.difficultySelector > 0 && current.difficultySelector == 0) {
+	if (vars.difficultySelector.Old > 0 && vars.difficultySelector.Current == 0) {
 		print("start returned true!");
 		return true;
 	}
@@ -328,6 +277,9 @@ reset
 	// if this *still* causes trouble we should rewrite it to check levelId
 	if (vars.inGame.Current == 0 && vars.inGame.Old == 1 && vars.characterHP.Current == 30) {
 		print("reset returned true!");
+
+		
+
 		return true;
 	}
 }
