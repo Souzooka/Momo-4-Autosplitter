@@ -1,18 +1,10 @@
 
-// Futureproofing info
-// This game seems to be updated frequently, so we need to set up some aobscans ASAP
-
 // TODO: Find a solid health pointer -- if Edea bleeds before she's active, then there is a pointer, even if we have trouble finding it.
 // *Do not use 0, 0, 4, 230*
 // We might be able to make our own pointer using an aobscan for code that changes boss HP
 // Bosses die at <= 11 HP
 
-state("MomodoraRUtM", "v1.04d")
-{
- 	// Lubella 1 split
- 	double lubella1HP : 0x230D0EC, 0x8, 0x140, 0x4, 0x230;
- 	double lubella1HPMax : 0x230D0EC, 0x8, 0x140, 0x4, 0x240;
-}
+state("MomodoraRUtM") {}
 
 startup
 {
@@ -41,6 +33,9 @@ startup
 	print("Hey, this compiled correctly. Way to go!");
 	// SETTINGS END //
 
+	// just a stopwatch
+	vars.stopwatch = new Stopwatch();
+
 	// AOB SCANS //
 	vars.watchers = new MemoryWatcherList();
 }
@@ -49,6 +44,9 @@ init
 {
 	// Placeholders
 	vars.difficultySelector = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.lubella1HP = new MemoryWatcher<double>(IntPtr.Zero);
+	vars.lubella1HPMax = new MemoryWatcher<double>(IntPtr.Zero);
+
 
 	// Statistics
 	vars.hpLost = 0;
@@ -180,18 +178,18 @@ update
 			System.IO.Directory.CreateDirectory("MomodoraRUtM");
 		}
 		using (System.IO.StreamWriter sw = new System.IO.StreamWriter(@"MomodoraRUtM\MomodoraRUtM " + DateTime.Now.ToString("HH.mm.ss - MM.dd.yyyy") + ".txt")) {
-			if (current.choirDefeated == 1 && current.ivoryBugs == 20 && current.vitalityFragments == 17) {
+			if (vars.choirDefeated.Current == 1 && vars.ivoryBugs.Current == 20 && vars.vitalityFragments.Current == 17) {
 				sw.WriteLine("Is this a \"100%\" run?: True");
 			}
 			else {
 				sw.WriteLine("Is this a \"100%\" run?: False");
 			}
-			sw.WriteLine("Has Choir been defeated?: " + Convert.ToBoolean(current.choirDefeated));
-			sw.WriteLine("Bug ivories collected: " + current.ivoryBugs + "/20.");
-			sw.WriteLine("Vitality fragments collected: " + current.vitalityFragments + "/17.");
+			sw.WriteLine("Has Choir been defeated?: " + Convert.ToBoolean(vars.choirDefeated.Current));
+			sw.WriteLine("Bug ivories collected: " + vars.ivoryBugs.Current + "/20.");
+			sw.WriteLine("Vitality fragments collected: " + vars.vitalityFragments.Current + "/17.");
 			sw.WriteLine("\r\n_______________\r\n");
 			sw.WriteLine("Total HP lost: " + vars.hpLost);
-			sw.WriteLine("Non-boss enemies killed: " + current.enemiesKilled);
+			sw.WriteLine("Non-boss enemies killed: " + vars.enemiesKilled.Current);
 		}
 	}
 
@@ -240,7 +238,48 @@ update
 		{
 			vars.difficultySelector
 		});
+	}
 
+
+	// Lubella's HP pointer isn't active until she spawns, so rescan every three seconds when we're in that area
+	if (vars.levelId.Current == 73 && !vars.stopwatch.IsRunning && vars.lubella1HPMax.Current == 0) {
+		vars.stopwatch.Start();
+	}
+	if (vars.stopwatch.ElapsedMilliseconds > 3000) {
+		var module = modules.First();
+		var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
+
+		vars.lubella1HPBaseAddrCodeTarget = new SigScanTarget(1,
+			"A1 ?? ?? ?? ??",		// mov eax,[034ED0EC] ; base address
+			"8B 04 B0",				// mov eax,[eax+esi*4]
+			"EB 02",				// jmp 0180A504
+			"33 C0",				// xor eax,eax
+			"80 78 2D 00",			// cmp byte ptr [eax+2D],00
+			"75 4D",				// jne 0180A557
+			"8B 0D ?? ?? ?? ??",	// ecx,[034EAF3C]
+			"8B 90 ?? ?? ?? ??",	// edx,[eax+00000140]
+			"83 E9 80",				// ecx,-80
+			"85 D2"					// test edx,edx
+		);
+
+		vars.lubella1HPBaseAddrCodeAddr = scanner.Scan(vars.lubella1HPBaseAddrCodeTarget);
+		vars.lubella1HPBaseAddr = memory.ReadValue<int>((IntPtr)vars.lubella1HPBaseAddrCodeAddr);
+		vars.lubella1HPPointerLevel1 = memory.ReadValue<int>((IntPtr)vars.lubella1HPBaseAddr) + 0x8;
+		vars.lubella1HPPointerLevel2 = memory.ReadValue<int>((IntPtr)vars.lubella1HPPointerLevel1) + 0x140;
+		vars.lubella1HPPointerLevel3 = memory.ReadValue<int>((IntPtr)vars.lubella1HPPointerLevel2) + 0x4;
+
+		vars.lubella1HPAddr = memory.ReadValue<int>((IntPtr)vars.lubella1HPPointerLevel3) + 0x230;
+		vars.lubella1HPMaxAddr = memory.ReadValue<int>((IntPtr)vars.lubella1HPPointerLevel3) + 0x240;
+
+		vars.lubella1HP = new MemoryWatcher<double>((IntPtr)vars.lubella1HPAddr);
+		vars.lubella1HPMax = new MemoryWatcher<double>((IntPtr)vars.lubella1HPMaxAddr);
+		vars.watchers.AddRange(new MemoryWatcher[]
+		{
+			vars.lubella1HP,
+			vars.lubella1HPMax
+		});
+
+		vars.stopwatch.Reset();
 	}
 }
 
@@ -280,11 +319,12 @@ split
 		return true;
 	}
 	// Lubella 1
-	if (settings["lubella1"] && old.lubella1HP > 11 && current.lubella1HPMax == 130 && current.lubella1HP <= 11) {
+	if (settings["lubella1"] && vars.lubella1HP.Current <= 11 && vars.lubella1HP.Old > 11 && vars.lubella1HPMax.Current == 130) {
 		print("Lubella 1 defeated!");
 		vars.lubella1Defeated = true;
 		return true;
 	}
+
 	// Frida
 	if (settings["frida"] && vars.levelId.Current == 141 && vars.cutsceneProgress.Current == 0 && vars.cutsceneProgress.Old == 500) {
 		print("Frida defeated!");
