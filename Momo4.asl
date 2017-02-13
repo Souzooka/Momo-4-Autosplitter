@@ -1,25 +1,40 @@
-// Hi. If you're looking at this code, you might be interested in updating it for a newer version of MomodoraRUtM. This is actually really easy! 
-// Basically, all you need to do is locate five unique pointer paths (one of which even is a static pointer). Last offsets should hopefully be the same.
 
-// The first is for the double difficultySelector. This needs to be used (rather than levelId) for accurate starting time. This double value is 1 when selecting easy, 2 for normal, 3 for hard, 4 for insane, and 0 every other time.
-// Note that if the last offset changes from 0x41B0, finding out what writes to this address via CE should give you an accurate last offset.
-// This is the only value we use with this pointer path.
+// Futureproofing info
+// This game seems to be updated frequently, so we need to set up some aobscans ASAP
 
-// The second is for characterHP. This double value is 30 in the main menu, 80 on easy, 30 on normal, 15 on hard, and 1 on insane, and obviously decreases/increases according to game rules.
-// characterHP's last offset should always be 0x0.
-// We use this value for characterHP, inGame, and cutsceneProgress.
+// Flags' addresses are accessed by adding a base address to an offset in eax (I think it's eax anyways). The flags are all doubles.
+// * edeaDefeated: 0xE0
+// * arsonistDefeated: 0x9E0
+// * warpStone: 0x5C0
+// * monasteryKey: 0x260
+// * fennelDefeated: 0x3D0
+// * magnoliaDefeated: 0x660
+// * cloneAngelDefeated: 0x640
+// * choirDefeated: 0x6A0
+// * ivoryBugs: 0x3C0
+// * vitalityFragments: 0xAE0
+// * enemiesKilled: 0x490
 
-// The third is for levelId. This one should be easy to find. This is a byte value with a static pointer, and should be 1 on saves, 11 on difficulty selection, and 21 on the first area.
+// NOTE: Note that the queen doesn't have a flag. This makes sense since the game immediately ends after she is defeated.
+// Some flags are unpractical to use, and so there is likely a better way to check if bosses are defeated if we can point to HP and use levelId, which transitions to the next point.
 
-// The fourth is for various flags and statistics, and this encompasses almost the rest of the values.
+// TODO: Find a solid health pointer -- if Edea bleeds before she's active, then there is a pointer, even if we have trouble finding it.
+// *Do not use 0, 0, 4, 230*
+// We might be able to make our own pointer using an aobscan for code that changes boss HP
+// Bosses die at <= 11 HP
 
-// The last is the trickiest, for Lubella 1. Her flag is set after Moka is defeated, and there are no other clear indicators for her being defeated except for her HP. #thanksbombservice
-// HP pointers seem to change based on boss order, so thankfully she is always fought second.
-// She starts at 130 HP, and is defeated at <= 11 HP.
-// Boss' HP last offset is 0x230, max HP is 0x240. Do NOT use a <base address>, 0x0, 0x0, 0x4, 0x230 pointer! This is for universal boss HP, but also appears to point at other addresses very often. Will definitely cause unintended behavior!
+// levelId is 1 at title, 11 in save, 21 in first room -- it is a byte
 
-// If you're not me and updating this script, send a pull request to the gitHub at https://github.com/Souzooka/Momo-4-Autosplitter
+// difficultySelector needs to be used for best start timing, it's 1 when looking at easy, 2 for normal, 3 for hard, 4 for insane, and 0 otherwise.
 
+// even if a universal HP can't be found, since it's found off of charHP we can still use cutsceneProgress
+// cutsceneProgress is a misnomer, I'm not sure how this changes but it is consistent and stable.
+
+// find aobscan for characterHP being changed
+// offsets from characterHP address:
+// * characterHP: 0x0
+// * inGame: 0x780
+// * cutsceneProgress: 0xAB0
 
 
 state("MomodoraRUtM", "v1.04d")
