@@ -100,6 +100,7 @@ init
 	vars.cutsceneProgressAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0xAB0;
 
 	// Offset 0x4 (from hpPointerLevel1), 0x60, 0x4, 0x4, 0xXXX
+	// * savesCount: 0x0
 	// * edeaDefeated: 0xE0
 	// * arsonistDefeated: 0x9E0
 	// * warpStone: 0x5C0
@@ -117,6 +118,7 @@ init
 	vars.flagsPointerLevel4 = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel3) + 0x4;
 
 	// Flags
+	vars.savesCountAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x0;
 	vars.edeaDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0xE0;
 	vars.arsonistDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x9E0;
 	vars.warpStoneAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x5C0;
@@ -135,6 +137,7 @@ init
 	vars.characterHP = new MemoryWatcher<double>((IntPtr)vars.characterHPAddr);
 	vars.inGame = new MemoryWatcher<double>((IntPtr)vars.inGameAddr);
 	vars.cutsceneProgress = new MemoryWatcher<double>((IntPtr)vars.cutsceneProgressAddr);
+	vars.savesCount = new MemoryWatcher<double>((IntPtr)vars.savesCountAddr);
 	vars.edeaDefeated = new MemoryWatcher<double>((IntPtr)vars.edeaDefeatedAddr);
 	vars.arsonistDefeated = new MemoryWatcher<double>((IntPtr)vars.arsonistDefeatedAddr);
 	vars.warpStone = new MemoryWatcher<double>((IntPtr)vars.warpStoneAddr);
@@ -155,6 +158,7 @@ init
 		vars.characterHP,
 		vars.inGame,
 		vars.cutsceneProgress,
+		vars.savesCount,
 		vars.edeaDefeated,
 		vars.arsonistDefeated,
 		vars.warpStone,
@@ -188,6 +192,7 @@ update
 			sw.WriteLine("Bug ivories collected: " + vars.ivoryBugs.Current + "/20.");
 			sw.WriteLine("Vitality fragments collected: " + vars.vitalityFragments.Current + "/17.");
 			sw.WriteLine("\r\n_______________\r\n");
+			sw.WriteLine("Total saves: "+ vars.savesCount.Current);
 			sw.WriteLine("Total HP lost: " + vars.hpLost);
 			sw.WriteLine("Non-boss enemies killed: " + vars.enemiesKilled.Current);
 		}
