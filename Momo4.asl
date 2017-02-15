@@ -42,135 +42,35 @@ startup
 
 init
 {
-	// Placeholders
+	vars.watchers.Clear();
+
+	// Placeholders -- AOB scans were moved out of init to make sure that values were obtained properly. Check update!
 	vars.difficultySelector = new MemoryWatcher<double>(IntPtr.Zero); 
 	vars.lubella1HP = new MemoryWatcher<double>(IntPtr.Zero);
 	vars.lubella1HPMax = new MemoryWatcher<double>(IntPtr.Zero);
+	vars.levelId = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.characterHP = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.inGame = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.cutsceneProgress = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.savesCount = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.edeaDefeated = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.arsonistDefeated = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.warpStone = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.monasteryKey = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.fennelDefeated = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.magnoliaDefeated = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.freshSpringLeaf = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.cloneAngelDefeated = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.choirDefeated = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.ivoryBugs = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.vitalityFragments = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.enemiesKilled = new MemoryWatcher<double>(IntPtr.Zero); 
 
+	vars.levelIdCodeAddr = IntPtr.Zero;
 
 	// Statistics
 	vars.hpLost = 0;
 
-	// AOB SCANS //
-
-	var module = modules.First();
-	var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
-
-	vars.levelIdCodeTarget = new SigScanTarget(2,
-		"89 35 ?? ?? ?? ??", 	// mov [035AAF00],esi ; destination is levelId address, other code that follows is only for the purposes of finding a unique match
-		"7D 0B",				// jnl 018CAB1A
-		"8B 15 ?? ?? ?? ??",	// mov edx,[035AAF64]
-		"8B 04 B2",				// mov eax,[edx+esi*4]
-		"EB 02",				// jmp 018CAB1C
-		"33 C0",				// xor eax,eax
-		"50",					// push eax
-		"E8 ?? ?? ?? ??"		// call 018C94F0
-	);
-
-	vars.flagsBaseAddrCodeTarget = new SigScanTarget(1,
-		"A1 ?? ?? ?? ??",			// mov eax,[02400A48] (MomodoraRUtM.exe+2300A48) ; base address we're looking for for flags/character/gamestatus pointer
-		"8B 40 04",					// mov eax,[eax+04]
-		"C7 44 24 10 ?? ?? ?? ??",	// mov [esp+10],00000000
-		"F2 ?? ?? 88 ?? ?? ?? ??",	// cvttsd2si ecx,[eax+00000660] ; what is this opcode even
-		"85 C9",					// test ecx,ecx
-		"7F 0C"						// jg 0013C1D2
-	);
-
-	// Wait for the game to be loaded, otherwise scans will return 0
-	// TODO: 
-	// Find better way of checking if the game is loaded or not rather than just waiting
-	Thread.Sleep(4000);
-
-	// Find code address (+ 0x2 for levelId, first int in SigScanTarget)
-	vars.levelIdCodeAddr = scanner.Scan(vars.levelIdCodeTarget);
-	vars.flagsBaseAddrCodeAddr = scanner.Scan(vars.flagsBaseAddrCodeTarget);
-
-	// Read the address for levelID from code
-	vars.levelIdAddr = memory.ReadValue<int>((IntPtr)vars.levelIdCodeAddr);
-	vars.flagsBaseAddr = memory.ReadValue<int>((IntPtr)vars.flagsBaseAddrCodeAddr);
-
-	// offsets 0x4, 0x0 for character HP
-	// 0x4, 0x780 for inGame
-	// 0x4, 0xAB0 for cutsceneProgress
-	vars.hpPointerLevel1 = memory.ReadValue<int>((IntPtr)vars.flagsBaseAddr) + 0x4;
-	vars.flagsPointerLevel1 = vars.hpPointerLevel1;
-
-	vars.characterHPAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x0;
-	vars.inGameAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x780;
-	vars.cutsceneProgressAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0xAB0;
-
-	// Offset 0x4 (from hpPointerLevel1), 0x60, 0x4, 0x4, 0xXXX
-	// * savesCount: 0x0
-	// * edeaDefeated: 0xE0
-	// * arsonistDefeated: 0x9E0
-	// * warpStone: 0x5C0
-	// * monasteryKey: 0x260
-	// * fennelDefeated: 0x3D0
-	// * magnoliaDefeated: 0x660
-	// * freshSpringLeaf: 0x600
-	// * cloneAngelDefeated: 0x640
-	// * choirDefeated: 0x6A0
-	// * ivoryBugs: 0x3C0
-	// * vitalityFragments: 0xAE0
-	// * enemiesKilled: 0x490
-	vars.flagsPointerLevel2 = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel1) + 0x60;
-	vars.flagsPointerLevel3 = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel2) + 0x4;
-	vars.flagsPointerLevel4 = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel3) + 0x4;
-
-	// Flags
-	vars.savesCountAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x0;
-	vars.edeaDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0xE0;
-	vars.arsonistDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x9E0;
-	vars.warpStoneAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x5C0;
-	vars.monasteryKeyAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x260;
-	vars.fennelDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x3D0;
-	vars.magnoliaDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x660;
-	vars.freshSpringLeafAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x660;
-	vars.cloneAngelDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x640;
-	vars.choirDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x6A0;
-	vars.ivoryBugsAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x3C0;
-	vars.vitalityFragmentsAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0xAE0;
-	vars.enemiesKilledAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x490;
-
-	// Read the value of these addresses
-	vars.levelId = new MemoryWatcher<byte>((IntPtr)vars.levelIdAddr);
-	vars.characterHP = new MemoryWatcher<double>((IntPtr)vars.characterHPAddr);
-	vars.inGame = new MemoryWatcher<double>((IntPtr)vars.inGameAddr);
-	vars.cutsceneProgress = new MemoryWatcher<double>((IntPtr)vars.cutsceneProgressAddr);
-	vars.savesCount = new MemoryWatcher<double>((IntPtr)vars.savesCountAddr);
-	vars.edeaDefeated = new MemoryWatcher<double>((IntPtr)vars.edeaDefeatedAddr);
-	vars.arsonistDefeated = new MemoryWatcher<double>((IntPtr)vars.arsonistDefeatedAddr);
-	vars.warpStone = new MemoryWatcher<double>((IntPtr)vars.warpStoneAddr);
-	vars.monasteryKey = new MemoryWatcher<double>((IntPtr)vars.monasteryKeyAddr);
-	vars.fennelDefeated = new MemoryWatcher<double>((IntPtr)vars.fennelDefeatedAddr);
-	vars.magnoliaDefeated = new MemoryWatcher<double>((IntPtr)vars.magnoliaDefeatedAddr);
-	vars.freshSpringLeaf = new MemoryWatcher<double>((IntPtr)vars.freshSpringLeafAddr);
-	vars.cloneAngelDefeated = new MemoryWatcher<double>((IntPtr)vars.cloneAngelDefeatedAddr);
-	vars.choirDefeated = new MemoryWatcher<double>((IntPtr)vars.choirDefeatedAddr);
-	vars.ivoryBugs = new MemoryWatcher<double>((IntPtr)vars.ivoryBugsAddr);
-	vars.vitalityFragments = new MemoryWatcher<double>((IntPtr)vars.vitalityFragmentsAddr);
-	vars.enemiesKilled = new MemoryWatcher<double>((IntPtr)vars.enemiesKilledAddr);
-	
-	vars.watchers.Clear();
-	vars.watchers.AddRange(new MemoryWatcher[]
-	{
-		vars.levelId,
-		vars.characterHP,
-		vars.inGame,
-		vars.cutsceneProgress,
-		vars.savesCount,
-		vars.edeaDefeated,
-		vars.arsonistDefeated,
-		vars.warpStone,
-		vars.monasteryKey,
-		vars.fennelDefeated,
-		vars.magnoliaDefeated,
-		vars.cloneAngelDefeated,
-		vars.choirDefeated,
-		vars.ivoryBugs,
-		vars.vitalityFragments,
-		vars.enemiesKilled,
-	});
 
 }
 
@@ -211,8 +111,6 @@ update
 	// statistics end
 	// save run data end
 
-	vars.watchers.UpdateAll(game);
-
 	// addresses for difficultySelector change when we leave the game, so rescan for difficultySelector when entering difficulty menu
 	if (vars.levelId.Current == 11 && vars.levelId.Old != 11) {
 
@@ -236,7 +134,6 @@ update
 		vars.difficultySelectorPointerLevel2 = memory.ReadValue<int>((IntPtr)vars.difficultySelectorPointerLevel1) + 0xC;
 		vars.difficultySelectorPointerLevel3 = memory.ReadValue<int>((IntPtr)vars.difficultySelectorPointerLevel2) + 0x4;
 		vars.difficultySelectorAddr = memory.ReadValue<int>((IntPtr)vars.difficultySelectorPointerLevel3) + 0x41B0;
-		print(vars.difficultySelectorAddr.ToString("X"));
 
 		vars.difficultySelector = new MemoryWatcher<double>((IntPtr)vars.difficultySelectorAddr);
 		vars.watchers.AddRange(new MemoryWatcher[]
@@ -286,6 +183,135 @@ update
 
 		vars.stopwatch.Reset();
 	}
+
+	if (modules.Length > 100 && (IntPtr)vars.levelIdCodeAddr == IntPtr.Zero) {
+
+		var module = modules.First();
+		var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
+
+		vars.levelIdCodeTarget = new SigScanTarget(2,
+			"89 35 ?? ?? ?? ??", 	// mov [035AAF00],esi ; destination is levelId address, other code that follows is only for the purposes of finding a unique match
+			"7D 0B",				// jnl 018CAB1A
+			"8B 15 ?? ?? ?? ??",	// mov edx,[035AAF64]
+			"8B 04 B2",				// mov eax,[edx+esi*4]
+			"EB 02",				// jmp 018CAB1C
+			"33 C0",				// xor eax,eax
+			"50",					// push eax
+			"E8 ?? ?? ?? ??"		// call 018C94F0
+		);
+
+		vars.flagsBaseAddrCodeTarget = new SigScanTarget(1,
+			"A1 ?? ?? ?? ??",			// mov eax,[02400A48] (MomodoraRUtM.exe+2300A48) ; base address we're looking for for flags/character/gamestatus pointer
+			"8B 40 04",					// mov eax,[eax+04]
+			"C7 44 24 10 ?? ?? ?? ??",	// mov [esp+10],00000000
+			"F2 ?? ?? 88 ?? ?? ?? ??",	// cvttsd2si ecx,[eax+00000660] ; what is this opcode even
+			"85 C9",					// test ecx,ecx
+			"7F 0C"						// jg 0013C1D2
+		);
+
+		// Wait for the game to be loaded, otherwise scans will return 0
+		// TODO: 
+		// Find better way of checking if the game is loaded or not rather than just waiting
+
+		// modules.Length returned 102 when fully loaded on 1.05
+		while (modules.Length < 80) {
+			// Do nothing
+			;
+		}
+
+
+		// Find code address (+ 0x2 for levelId, first int in SigScanTarget)
+		vars.levelIdCodeAddr = scanner.Scan(vars.levelIdCodeTarget);
+		vars.flagsBaseAddrCodeAddr = scanner.Scan(vars.flagsBaseAddrCodeTarget);
+
+		// Read the address for levelID from code
+		vars.levelIdAddr = memory.ReadValue<int>((IntPtr)vars.levelIdCodeAddr);
+		vars.flagsBaseAddr = memory.ReadValue<int>((IntPtr)vars.flagsBaseAddrCodeAddr);
+
+		// offsets 0x4, 0x0 for character HP
+		// 0x4, 0x780 for inGame
+		// 0x4, 0xAB0 for cutsceneProgress
+		vars.hpPointerLevel1 = memory.ReadValue<int>((IntPtr)vars.flagsBaseAddr) + 0x4;
+		vars.flagsPointerLevel1 = vars.hpPointerLevel1;
+
+		vars.characterHPAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x0;
+		vars.inGameAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0x780;
+		vars.cutsceneProgressAddr = memory.ReadValue<int>((IntPtr)vars.hpPointerLevel1) + 0xAB0;
+
+		// Offset 0x4 (from hpPointerLevel1), 0x60, 0x4, 0x4, 0xXXX
+		// * savesCount: 0x0
+		// * edeaDefeated: 0xE0
+		// * arsonistDefeated: 0x9E0
+		// * warpStone: 0x5C0
+		// * monasteryKey: 0x260
+		// * fennelDefeated: 0x3D0
+		// * magnoliaDefeated: 0x660
+		// * freshSpringLeaf: 0x600
+		// * cloneAngelDefeated: 0x640
+		// * choirDefeated: 0x6A0
+		// * ivoryBugs: 0x3C0
+		// * vitalityFragments: 0xAE0
+		// * enemiesKilled: 0x490
+		vars.flagsPointerLevel2 = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel1) + 0x60;
+		vars.flagsPointerLevel3 = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel2) + 0x4;
+		vars.flagsPointerLevel4 = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel3) + 0x4;
+
+		// Flags
+		vars.savesCountAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x0;
+		vars.edeaDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0xE0;
+		vars.arsonistDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x9E0;
+		vars.warpStoneAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x5C0;
+		vars.monasteryKeyAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x260;
+		vars.fennelDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x3D0;
+		vars.magnoliaDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x660;
+		vars.freshSpringLeafAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x660;
+		vars.cloneAngelDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x640;
+		vars.choirDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x6A0;
+		vars.ivoryBugsAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x3C0;
+		vars.vitalityFragmentsAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0xAE0;
+		vars.enemiesKilledAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x490;
+
+		// Read the value of these addresses
+		vars.levelId = new MemoryWatcher<byte>((IntPtr)vars.levelIdAddr);
+		vars.characterHP = new MemoryWatcher<double>((IntPtr)vars.characterHPAddr);
+		vars.inGame = new MemoryWatcher<double>((IntPtr)vars.inGameAddr);
+		vars.cutsceneProgress = new MemoryWatcher<double>((IntPtr)vars.cutsceneProgressAddr);
+		vars.savesCount = new MemoryWatcher<double>((IntPtr)vars.savesCountAddr);
+		vars.edeaDefeated = new MemoryWatcher<double>((IntPtr)vars.edeaDefeatedAddr);
+		vars.arsonistDefeated = new MemoryWatcher<double>((IntPtr)vars.arsonistDefeatedAddr);
+		vars.warpStone = new MemoryWatcher<double>((IntPtr)vars.warpStoneAddr);
+		vars.monasteryKey = new MemoryWatcher<double>((IntPtr)vars.monasteryKeyAddr);
+		vars.fennelDefeated = new MemoryWatcher<double>((IntPtr)vars.fennelDefeatedAddr);
+		vars.magnoliaDefeated = new MemoryWatcher<double>((IntPtr)vars.magnoliaDefeatedAddr);
+		vars.freshSpringLeaf = new MemoryWatcher<double>((IntPtr)vars.freshSpringLeafAddr);
+		vars.cloneAngelDefeated = new MemoryWatcher<double>((IntPtr)vars.cloneAngelDefeatedAddr);
+		vars.choirDefeated = new MemoryWatcher<double>((IntPtr)vars.choirDefeatedAddr);
+		vars.ivoryBugs = new MemoryWatcher<double>((IntPtr)vars.ivoryBugsAddr);
+		vars.vitalityFragments = new MemoryWatcher<double>((IntPtr)vars.vitalityFragmentsAddr);
+		vars.enemiesKilled = new MemoryWatcher<double>((IntPtr)vars.enemiesKilledAddr);
+		
+		vars.watchers.AddRange(new MemoryWatcher[]
+		{
+			vars.levelId,
+			vars.characterHP,
+			vars.inGame,
+			vars.cutsceneProgress,
+			vars.savesCount,
+			vars.edeaDefeated,
+			vars.arsonistDefeated,
+			vars.warpStone,
+			vars.monasteryKey,
+			vars.fennelDefeated,
+			vars.magnoliaDefeated,
+			vars.cloneAngelDefeated,
+			vars.choirDefeated,
+			vars.ivoryBugs,
+			vars.vitalityFragments,
+			vars.enemiesKilled,
+		});
+	}
+
+	vars.watchers.UpdateAll(game);
 }
 
 start
@@ -305,7 +331,7 @@ reset
 	// under normal circumstances, when dead characterHP is 0
 	// characterHP is set to 30 when returning to the title menu
 	// if this *still* causes trouble we should rewrite it to check levelId
-	if (vars.inGame.Current == 0 && vars.inGame.Old == 1 && vars.characterHP.Current == 30) {
+	if (vars.levelId.Current == 1 && vars.levelId.Old != 1) {
 		print("reset returned true!");
 		return true;
 	}
