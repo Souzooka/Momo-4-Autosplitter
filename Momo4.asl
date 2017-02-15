@@ -4,7 +4,12 @@
 // We might be able to make our own pointer using an aobscan for code that changes boss HP
 // Bosses die at <= 11 HP
 
-state("MomodoraRUtM") {}
+state("MomodoraRUtM") {
+
+	// would you double your salary, at the risk of becoming DEAD?
+	double salary : 0xDEAD;
+
+}
 
 startup
 {
@@ -208,17 +213,6 @@ update
 			"85 C9",					// test ecx,ecx
 			"7F 0C"						// jg 0013C1D2
 		);
-
-		// Wait for the game to be loaded, otherwise scans will return 0
-		// TODO: 
-		// Find better way of checking if the game is loaded or not rather than just waiting
-
-		// modules.Length returned 102 when fully loaded on 1.05
-		while (modules.Length < 80) {
-			// Do nothing
-			;
-		}
-
 
 		// Find code address (+ 0x2 for levelId, first int in SigScanTarget)
 		vars.levelIdCodeAddr = scanner.Scan(vars.levelIdCodeTarget);
