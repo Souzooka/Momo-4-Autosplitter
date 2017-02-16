@@ -312,10 +312,6 @@ update
 		stopwatch2.Restart();
 	}
 
-	if (vars.levelId.Current == 1) {
-		vars.difficultySelector = new MemoryWatcher(IntPtr.Zero);
-	}
-
 
 
 	vars.watchers.UpdateAll(game);
@@ -326,6 +322,7 @@ start
 	// If we were in the difficulty menu and then left it
 	// this value is preserved if we return to title menu
 	if (vars.difficultySelector.Old > 0 && vars.difficultySelector.Current == 0) {
+		vars.difficultySelector = new MemoryWatcher(IntPtr.Zero);
 		print("start returned true!");
 		return true;
 	}
