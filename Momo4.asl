@@ -306,10 +306,10 @@ update
 			vars.enemiesKilled,
 		});
 
-	stopwatch2.Reset();
+	vars.stopwatch2.Reset();
 	}
 	else if (modules.Length < 80) {
-		stopwatch2.Restart();
+		vars.stopwatch2.Restart();
 	}
 
 
@@ -322,7 +322,7 @@ start
 	// If we were in the difficulty menu and then left it
 	// this value is preserved if we return to title menu
 	if (vars.difficultySelector.Old > 0 && vars.difficultySelector.Current == 0) {
-		vars.difficultySelector = new MemoryWatcher(IntPtr.Zero);
+		vars.difficultySelector = new MemoryWatcher<double>(IntPtr.Zero);
 		print("start returned true!");
 		return true;
 	}
