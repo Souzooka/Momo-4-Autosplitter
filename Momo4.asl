@@ -409,7 +409,6 @@ split
 
 	// Choir
 	if (settings["choir"] && vars.choirDefeated.Old == 0 && vars.choirDefeated.Current == 1 && vars.inGame.Old == 1) {
-		vars.choirDefeated = 1;
 		print("Choir defeated!");
 		return true;
 	}
