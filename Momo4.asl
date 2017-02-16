@@ -39,7 +39,10 @@ startup
 	// SETTINGS END //
 
 	// just a stopwatch
+	// used for scanning for Lubella's HP pointer when in her boss arena
 	vars.stopwatch = new Stopwatch();
+
+	// used to check if the game is loaded every 2 seconds, stops being used after the initial scan is done.
 	vars.stopwatch2 = new Stopwatch();
 	vars.stopwatch2.Start();
 
@@ -52,6 +55,7 @@ init
 	vars.watchers.Clear();
 
 	// Placeholders -- AOB scans were moved out of init to make sure that values were obtained properly. Check update!
+	// these should be picked up by garbage collection when they are reassigned
 	vars.difficultySelector = new MemoryWatcher<double>(IntPtr.Zero); 
 	vars.lubella1HP = new MemoryWatcher<double>(IntPtr.Zero);
 	vars.lubella1HPMax = new MemoryWatcher<double>(IntPtr.Zero);
@@ -118,79 +122,10 @@ update
 	// statistics end
 	// save run data end
 
-	// addresses for difficultySelector change when we leave the game, so rescan for difficultySelector when entering difficulty menu
-	if (vars.levelId.Current == 11 && vars.levelId.Old != 11) {
+	// AOB SCANS
 
-		var module = modules.First();
-		var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
-
-		vars.difficultySelectorBaseAddrCodeTarget = new SigScanTarget(2,
-			"8B 15 ?? ?? ?? ??",	// mov edx,[035C17DC] ; base address
-			"23 C1",				// and eax,eax
-			"8B 04 C2",				// mov eax,[edx+eax*8]
-			"85 C0",				// test eax,eax
-			"74 10",				// je 018A595C
-			"8D 64 24 00",			// esp,[esp+00]
-			"39 48 08",				// cmp [eax+08],ecx
-			"74 0A"					// je 018A595F
-		);
-
-		vars.difficultySelectorBaseAddrCodeAddr = scanner.Scan(vars.difficultySelectorBaseAddrCodeTarget);
-		vars.difficultySelectorBaseAddr = memory.ReadValue<int>((IntPtr)vars.difficultySelectorBaseAddrCodeAddr);
-		vars.difficultySelectorPointerLevel1 = memory.ReadValue<int>((IntPtr)vars.difficultySelectorBaseAddr) + 0xCB4;
-		vars.difficultySelectorPointerLevel2 = memory.ReadValue<int>((IntPtr)vars.difficultySelectorPointerLevel1) + 0xC;
-		vars.difficultySelectorPointerLevel3 = memory.ReadValue<int>((IntPtr)vars.difficultySelectorPointerLevel2) + 0x4;
-		vars.difficultySelectorAddr = memory.ReadValue<int>((IntPtr)vars.difficultySelectorPointerLevel3) + 0x41B0;
-
-		vars.difficultySelector = new MemoryWatcher<double>((IntPtr)vars.difficultySelectorAddr);
-		vars.watchers.AddRange(new MemoryWatcher[]
-		{
-			vars.difficultySelector
-		});
-	}
-
-
-	// Lubella's HP pointer isn't active until she spawns, so rescan every three seconds when we're in that area
-	if (vars.levelId.Current == 73 && !vars.stopwatch.IsRunning && vars.lubella1HPMax.Current == 0) {
-		vars.stopwatch.Start();
-	}
-	if (vars.stopwatch.ElapsedMilliseconds > 3000) {
-		var module = modules.First();
-		var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
-
-		vars.lubella1HPBaseAddrCodeTarget = new SigScanTarget(1,
-			"A1 ?? ?? ?? ??",		// mov eax,[034ED0EC] ; base address
-			"8B 04 B0",				// mov eax,[eax+esi*4]
-			"EB 02",				// jmp 0180A504
-			"33 C0",				// xor eax,eax
-			"80 78 2D 00",			// cmp byte ptr [eax+2D],00
-			"75 4D",				// jne 0180A557
-			"8B 0D ?? ?? ?? ??",	// ecx,[034EAF3C]
-			"8B 90 ?? ?? ?? ??",	// edx,[eax+00000140]
-			"83 E9 80",				// ecx,-80
-			"85 D2"					// test edx,edx
-		);
-
-		vars.lubella1HPBaseAddrCodeAddr = scanner.Scan(vars.lubella1HPBaseAddrCodeTarget);
-		vars.lubella1HPBaseAddr = memory.ReadValue<int>((IntPtr)vars.lubella1HPBaseAddrCodeAddr);
-		vars.lubella1HPPointerLevel1 = memory.ReadValue<int>((IntPtr)vars.lubella1HPBaseAddr) + 0x8;
-		vars.lubella1HPPointerLevel2 = memory.ReadValue<int>((IntPtr)vars.lubella1HPPointerLevel1) + 0x140;
-		vars.lubella1HPPointerLevel3 = memory.ReadValue<int>((IntPtr)vars.lubella1HPPointerLevel2) + 0x4;
-
-		vars.lubella1HPAddr = memory.ReadValue<int>((IntPtr)vars.lubella1HPPointerLevel3) + 0x230;
-		vars.lubella1HPMaxAddr = memory.ReadValue<int>((IntPtr)vars.lubella1HPPointerLevel3) + 0x240;
-
-		vars.lubella1HP = new MemoryWatcher<double>((IntPtr)vars.lubella1HPAddr);
-		vars.lubella1HPMax = new MemoryWatcher<double>((IntPtr)vars.lubella1HPMaxAddr);
-		vars.watchers.AddRange(new MemoryWatcher[]
-		{
-			vars.lubella1HP,
-			vars.lubella1HPMax
-		});
-
-		vars.stopwatch.Reset();
-	}
-
+	// initial scan, after init is run wait 2 seconds and if the game is loaded, run initial scans for flags and other data like levelId
+	// else reset timer and wait 2 more seconds
 	if (vars.stopwatch2.ElapsedMilliseconds > 2000 && modules.Length > 80 && (IntPtr)vars.levelIdCodeAddr == IntPtr.Zero) {
 
 		var module = modules.First();
@@ -312,7 +247,80 @@ update
 		vars.stopwatch2.Restart();
 	}
 
+	// addresses for difficultySelector change when we leave the game, so rescan for difficultySelector when entering difficulty menu
+	if (vars.levelId.Current == 11 && vars.levelId.Old != 11) {
 
+		var module = modules.First();
+		var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
+
+		vars.difficultySelectorBaseAddrCodeTarget = new SigScanTarget(2,
+			"8B 15 ?? ?? ?? ??",	// mov edx,[035C17DC] ; base address
+			"23 C1",				// and eax,eax
+			"8B 04 C2",				// mov eax,[edx+eax*8]
+			"85 C0",				// test eax,eax
+			"74 10",				// je 018A595C
+			"8D 64 24 00",			// esp,[esp+00]
+			"39 48 08",				// cmp [eax+08],ecx
+			"74 0A"					// je 018A595F
+		);
+
+		vars.difficultySelectorBaseAddrCodeAddr = scanner.Scan(vars.difficultySelectorBaseAddrCodeTarget);
+		vars.difficultySelectorBaseAddr = memory.ReadValue<int>((IntPtr)vars.difficultySelectorBaseAddrCodeAddr);
+		vars.difficultySelectorPointerLevel1 = memory.ReadValue<int>((IntPtr)vars.difficultySelectorBaseAddr) + 0xCB4;
+		vars.difficultySelectorPointerLevel2 = memory.ReadValue<int>((IntPtr)vars.difficultySelectorPointerLevel1) + 0xC;
+		vars.difficultySelectorPointerLevel3 = memory.ReadValue<int>((IntPtr)vars.difficultySelectorPointerLevel2) + 0x4;
+		vars.difficultySelectorAddr = memory.ReadValue<int>((IntPtr)vars.difficultySelectorPointerLevel3) + 0x41B0;
+
+		vars.difficultySelector = new MemoryWatcher<double>((IntPtr)vars.difficultySelectorAddr);
+		vars.watchers.AddRange(new MemoryWatcher[]
+		{
+			vars.difficultySelector
+		});
+	}
+
+
+	// Lubella's HP pointer isn't active until she spawns, so rescan every three seconds when we're in that area
+	if (vars.levelId.Current == 73 && !vars.stopwatch.IsRunning && vars.lubella1HPMax.Current == 0) {
+		vars.stopwatch.Start();
+	}
+	if (vars.stopwatch.ElapsedMilliseconds > 3000) {
+		var module = modules.First();
+		var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
+
+		vars.lubella1HPBaseAddrCodeTarget = new SigScanTarget(1,
+			"A1 ?? ?? ?? ??",		// mov eax,[034ED0EC] ; base address
+			"8B 04 B0",				// mov eax,[eax+esi*4]
+			"EB 02",				// jmp 0180A504
+			"33 C0",				// xor eax,eax
+			"80 78 2D 00",			// cmp byte ptr [eax+2D],00
+			"75 4D",				// jne 0180A557
+			"8B 0D ?? ?? ?? ??",	// ecx,[034EAF3C]
+			"8B 90 ?? ?? ?? ??",	// edx,[eax+00000140]
+			"83 E9 80",				// ecx,-80
+			"85 D2"					// test edx,edx
+		);
+
+		vars.lubella1HPBaseAddrCodeAddr = scanner.Scan(vars.lubella1HPBaseAddrCodeTarget);
+		vars.lubella1HPBaseAddr = memory.ReadValue<int>((IntPtr)vars.lubella1HPBaseAddrCodeAddr);
+		vars.lubella1HPPointerLevel1 = memory.ReadValue<int>((IntPtr)vars.lubella1HPBaseAddr) + 0x8;
+		vars.lubella1HPPointerLevel2 = memory.ReadValue<int>((IntPtr)vars.lubella1HPPointerLevel1) + 0x140;
+		vars.lubella1HPPointerLevel3 = memory.ReadValue<int>((IntPtr)vars.lubella1HPPointerLevel2) + 0x4;
+
+		vars.lubella1HPAddr = memory.ReadValue<int>((IntPtr)vars.lubella1HPPointerLevel3) + 0x230;
+		vars.lubella1HPMaxAddr = memory.ReadValue<int>((IntPtr)vars.lubella1HPPointerLevel3) + 0x240;
+
+		vars.lubella1HP = new MemoryWatcher<double>((IntPtr)vars.lubella1HPAddr);
+		vars.lubella1HPMax = new MemoryWatcher<double>((IntPtr)vars.lubella1HPMaxAddr);
+		vars.watchers.AddRange(new MemoryWatcher[]
+		{
+			vars.lubella1HP,
+			vars.lubella1HPMax
+		});
+
+		vars.stopwatch.Reset();
+	}
+
+	
 
 	vars.watchers.UpdateAll(game);
 }
@@ -320,8 +328,10 @@ update
 start
 {
 	// If we were in the difficulty menu and then left it
-	// this value is preserved if we return to title menu
+	// it's impossible to go back to title from difficulty menu
 	if (vars.difficultySelector.Old > 0 && vars.difficultySelector.Current == 0) {
+		// get rid of the memory watcher for difficultySelector to prevent false starts when the pointer is changed in game
+		// we scan for a new pointer when we enter the difficulty menu
 		vars.difficultySelector = new MemoryWatcher<double>(IntPtr.Zero);
 		print("start returned true!");
 		return true;
