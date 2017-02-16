@@ -40,6 +40,8 @@ startup
 
 	// just a stopwatch
 	vars.stopwatch = new Stopwatch();
+	vars.stopwatch2 = new Stopwatch();
+	vars.stopwatch2.Start();
 
 	// AOB SCANS //
 	vars.watchers = new MemoryWatcherList();
@@ -189,7 +191,7 @@ update
 		vars.stopwatch.Reset();
 	}
 
-	if (modules.Length > 100 && (IntPtr)vars.levelIdCodeAddr == IntPtr.Zero) {
+	if (vars.stopwatch2.ElapsedMilliseconds > 2000 && modules.Length > 80 && (IntPtr)vars.levelIdCodeAddr == IntPtr.Zero) {
 
 		var module = modules.First();
 		var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
@@ -303,7 +305,14 @@ update
 			vars.vitalityFragments,
 			vars.enemiesKilled,
 		});
+
+	stopwatch2.Reset();
 	}
+	else if (modules.Length < 80) {
+		stopwatch2.Restart();
+	}
+
+
 
 	vars.watchers.UpdateAll(game);
 }
