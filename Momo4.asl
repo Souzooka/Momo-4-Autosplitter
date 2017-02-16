@@ -312,6 +312,10 @@ update
 		stopwatch2.Restart();
 	}
 
+	if (vars.levelId.Current == 1) {
+		vars.difficultySelector = new MemoryWatcher(IntPtr.Zero);
+	}
+
 
 
 	vars.watchers.UpdateAll(game);
