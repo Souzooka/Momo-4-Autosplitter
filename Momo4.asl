@@ -126,7 +126,7 @@ update
 
 	// initial scan, after init is run wait 2 seconds and if the game is loaded, run initial scans for flags and other data like levelId
 	// else reset timer and wait 2 more seconds
-	if (vars.stopwatch2.ElapsedMilliseconds > 2000 && modules.Length > 80 && (IntPtr)vars.levelIdCodeAddr == IntPtr.Zero) {
+	if (vars.stopwatch2.ElapsedMilliseconds >= 2000 && (IntPtr)vars.levelIdCodeAddr == IntPtr.Zero) {
 
 		var module = modules.First();
 		var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
@@ -243,7 +243,7 @@ update
 
 	vars.stopwatch2.Reset();
 	}
-	else if (modules.Length < 80) {
+	else if ((IntPtr)vars.levelIdCodeAddr == IntPtr.Zero) {
 		vars.stopwatch2.Restart();
 	}
 
