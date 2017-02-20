@@ -78,6 +78,8 @@ init
 	vars.enemiesKilled = new MemoryWatcher<double>(IntPtr.Zero); 
 
 	vars.levelIdCodeAddr = IntPtr.Zero;
+	vars.savesCountAddr = IntPtr.Zero;
+	vars.flagsBaseAddrCodeAddr = IntPtr.Zero;
 
 	// Statistics
 	vars.hpLost = 0;
@@ -126,8 +128,9 @@ update
 
 	// initial scan, after init is run wait 2 seconds and if the game is loaded, run initial scans for flags and other data like levelId
 	// else reset timer and wait 2 more seconds
-	if (vars.stopwatch2.ElapsedMilliseconds >= 2000 && (IntPtr)vars.levelIdCodeAddr == IntPtr.Zero) {
+	if (vars.stopwatch2.ElapsedMilliseconds >= 2000 && ((IntPtr)vars.levelIdCodeAddr == IntPtr.Zero || (IntPtr)vars.savesCountAddr == IntPtr.Zero)) {
 
+		print("scanning");
 		var module = modules.First();
 		var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
 
@@ -145,10 +148,10 @@ update
 		vars.flagsBaseAddrCodeTarget = new SigScanTarget(1,
 			"A1 ?? ?? ?? ??",			// mov eax,[02400A48] (MomodoraRUtM.exe+2300A48) ; base address we're looking for for flags/character/gamestatus pointer
 			"8B 40 04",					// mov eax,[eax+04]
-			"C7 44 24 10 ?? ?? ?? ??",	// mov [esp+10],00000000
-			"F2 ?? ?? 88 ?? ?? ?? ??",	// cvttsd2si ecx,[eax+00000660] ; what is this opcode even
-			"85 C9",					// test ecx,ecx
-			"7F 0C"						// jg 0013C1D2
+			"89 44 24 18",				// mov [esp+18],eax
+			"8D 80 ?? ?? ?? ??",		// lea eax,[eax+00000D20]
+			"89 44 24 1C",				// mov [esp+1C],eax
+			"C7 44 24 7C 00 00 00 00"	// mov [esp+7C],00000000
 		);
 
 		// Find code address (+ 0x2 for levelId, first int in SigScanTarget)
@@ -243,7 +246,7 @@ update
 
 	vars.stopwatch2.Reset();
 	}
-	else if ((IntPtr)vars.levelIdCodeAddr == IntPtr.Zero) {
+	else if (vars.stopwatch2.ElapsedMilliseconds > 2000 && (IntPtr)vars.levelIdCodeAddr == IntPtr.Zero && (IntPtr)vars.savesCountAddr == IntPtr.Zero) {
 		vars.stopwatch2.Restart();
 	}
 
@@ -319,8 +322,6 @@ update
 
 		vars.stopwatch.Reset();
 	}
-
-	
 
 	vars.watchers.UpdateAll(game);
 }
