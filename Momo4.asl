@@ -80,56 +80,11 @@ init
 	vars.levelIdCodeAddr = IntPtr.Zero;
 	vars.savesCountAddr = IntPtr.Zero;
 	vars.flagsBaseAddrCodeAddr = IntPtr.Zero;
-
-	// Statistics
-	vars.hpLost = 0;
-
-
-}
-
-update
-{
-	// Save run data. REQUIRES ADMIN RIGHTS!
-	if (settings["saveRunData"] && vars.levelId.Current == 232 && vars.cutsceneProgress.Old != 1000 && vars.cutsceneProgress.Current == 1000) {
-		if (!System.IO.Directory.Exists("MomodoraRUtM")) {
-			System.IO.Directory.CreateDirectory("MomodoraRUtM");
-		}
-		using (System.IO.StreamWriter sw = new System.IO.StreamWriter(@"MomodoraRUtM\MomodoraRUtM " + DateTime.Now.ToString("HH.mm.ss - MM.dd.yyyy") + ".txt")) {
-			if (vars.choirDefeated.Current == 1 && vars.ivoryBugs.Current == 20 && vars.vitalityFragments.Current == 17) {
-				sw.WriteLine("Is this a \"100%\" run?: True");
-			}
-			else {
-				sw.WriteLine("Is this a \"100%\" run?: False");
-			}
-			sw.WriteLine("Has Choir been defeated?: " + Convert.ToBoolean(vars.choirDefeated.Current));
-			sw.WriteLine("Bug ivories collected: " + vars.ivoryBugs.Current + "/20.");
-			sw.WriteLine("Vitality fragments collected: " + vars.vitalityFragments.Current + "/17.");
-			sw.WriteLine("\r\n_______________\r\n");
-			sw.WriteLine("Total saves: "+ vars.savesCount.Current);
-			sw.WriteLine("Total HP lost: " + vars.hpLost);
-			sw.WriteLine("Non-boss enemies killed: " + vars.enemiesKilled.Current);
-		}
-	}
-
-	// Statistics management start
-	if (timer.CurrentTime.ToString() == "00:00:00 | 00:00:00") {
-		// Reset variables
-		vars.hpLost = 0;
-	}
-
-	// for statistics file
-	if (vars.characterHP.Current < vars.characterHP.Old && vars.inGame.Current == 1) {
-		vars.hpLost += (vars.characterHP.Old - vars.characterHP.Current);
-	}
-	// statistics end
-	// save run data end
-
-	// AOB SCANS
+	vars.edeaDefeatedAddr = IntPtr.Zero;
 
 	// initial scan, after init is run wait 2 seconds and if the game is loaded, run initial scans for flags and other data like levelId
 	// else reset timer and wait 2 more seconds
-	if (vars.stopwatch2.ElapsedMilliseconds >= 2000 && ((IntPtr)vars.levelIdCodeAddr == IntPtr.Zero || (IntPtr)vars.savesCountAddr == IntPtr.Zero)) {
-
+	vars.rescanFlags = (Func<int, int>)((remainingBytes) => {
 		print("scanning");
 		var module = modules.First();
 		var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
@@ -244,9 +199,61 @@ update
 			vars.enemiesKilled,
 		});
 
-	vars.stopwatch2.Reset();
+	vars.stopwatch2.Restart();
+
+	return 8;
+	});
+
+	// Statistics
+	vars.hpLost = 0;
+
+
+}
+
+update
+{
+	// Save run data. REQUIRES ADMIN RIGHTS!
+	if (settings["saveRunData"] && vars.levelId.Current == 232 && vars.cutsceneProgress.Old != 1000 && vars.cutsceneProgress.Current == 1000) {
+		if (!System.IO.Directory.Exists("MomodoraRUtM")) {
+			System.IO.Directory.CreateDirectory("MomodoraRUtM");
+		}
+		using (System.IO.StreamWriter sw = new System.IO.StreamWriter(@"MomodoraRUtM\MomodoraRUtM " + DateTime.Now.ToString("HH.mm.ss - MM.dd.yyyy") + ".txt")) {
+			if (vars.choirDefeated.Current == 1 && vars.ivoryBugs.Current == 20 && vars.vitalityFragments.Current == 17) {
+				sw.WriteLine("Is this a \"100%\" run?: True");
+			}
+			else {
+				sw.WriteLine("Is this a \"100%\" run?: False");
+			}
+			sw.WriteLine("Has Choir been defeated?: " + Convert.ToBoolean(vars.choirDefeated.Current));
+			sw.WriteLine("Bug ivories collected: " + vars.ivoryBugs.Current + "/20.");
+			sw.WriteLine("Vitality fragments collected: " + vars.vitalityFragments.Current + "/17.");
+			sw.WriteLine("\r\n_______________\r\n");
+			sw.WriteLine("Total saves: "+ vars.savesCount.Current);
+			sw.WriteLine("Total HP lost: " + vars.hpLost);
+			sw.WriteLine("Non-boss enemies killed: " + vars.enemiesKilled.Current);
+		}
 	}
-	else if (vars.stopwatch2.ElapsedMilliseconds > 2000 && (IntPtr)vars.levelIdCodeAddr == IntPtr.Zero && (IntPtr)vars.savesCountAddr == IntPtr.Zero) {
+
+	// Statistics management start
+	if (timer.CurrentTime.ToString() == "00:00:00 | 00:00:00") {
+		// Reset variables
+		vars.hpLost = 0;
+	}
+
+	// for statistics file
+	if (vars.characterHP.Current < vars.characterHP.Old && vars.inGame.Current == 1) {
+		vars.hpLost += (vars.characterHP.Old - vars.characterHP.Current);
+	}
+	// statistics end
+	// save run data end
+
+	// AOB SCANS
+
+
+	if (vars.stopwatch2.ElapsedMilliseconds >= 2000 && ((IntPtr)vars.levelIdCodeAddr == IntPtr.Zero || (IntPtr)vars.savesCountAddr == IntPtr.Zero)) {
+		vars.rescanFlags(1337);
+	}
+	else if (vars.stopwatch2.ElapsedMilliseconds > 2000 && vars.savesCount.Current == null) {
 		vars.stopwatch2.Restart();
 	}
 
@@ -323,6 +330,7 @@ update
 		vars.stopwatch.Reset();
 	}
 
+	print(vars.savesCountAddr.ToString());
 	vars.watchers.UpdateAll(game);
 }
 
@@ -346,7 +354,7 @@ reset
 	// under normal circumstances, when dead characterHP is 0
 	// characterHP is set to 30 when returning to the title menu
 	// if this *still* causes trouble we should rewrite it to check levelId
-	if (vars.levelId.Current == 1 && vars.levelId.Old != 1) {
+	if (vars.levelId.Current == 1 && vars.levelId.Old != 1 && vars.inGame.Current == 0) {
 		print("reset returned true!");
 		return true;
 	}
