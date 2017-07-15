@@ -26,6 +26,7 @@ startup
 	settings.Add("arsonist", true, "Arsonist", "splits");
 	settings.Add("monasteryKey", true, "Monastery Key", "splits");
 	settings.Add("fennel", true, "Fennel", "splits");
+	settings.Add("soldier", true, "Soldier", "splits");
 	settings.Add("magnolia", true, "Lupiar and Magnolia", "splits");
 	settings.Add("freshSpringLeaf", true, "Fresh Spring Leaf", "splits");
 	settings.Add("cloneAngel", true, "Clone Angel", "splits");
@@ -69,6 +70,7 @@ init
 	vars.warpStone = new MemoryWatcher<double>(IntPtr.Zero); 
 	vars.monasteryKey = new MemoryWatcher<double>(IntPtr.Zero); 
 	vars.fennelDefeated = new MemoryWatcher<double>(IntPtr.Zero); 
+	vars.soldierDefeated = new MemoryWatcher<double>(IntPtr.Zero); 
 	vars.magnoliaDefeated = new MemoryWatcher<double>(IntPtr.Zero); 
 	vars.freshSpringLeaf = new MemoryWatcher<double>(IntPtr.Zero); 
 	vars.cloneAngelDefeated = new MemoryWatcher<double>(IntPtr.Zero); 
@@ -134,6 +136,7 @@ init
 		// * warpStone: 0x5C0
 		// * monasteryKey: 0x260
 		// * fennelDefeated: 0x3D0
+		// * soldierDefeated: 0x4D0
 		// * magnoliaDefeated: 0x660
 		// * freshSpringLeaf: 0x600
 		// * cloneAngelDefeated: 0x640
@@ -152,6 +155,7 @@ init
 		vars.warpStoneAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x5C0;
 		vars.monasteryKeyAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x260;
 		vars.fennelDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x3D0;
+		vars.soldierDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x4D0;
 		vars.magnoliaDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x660;
 		vars.freshSpringLeafAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x660;
 		vars.cloneAngelDefeatedAddr = memory.ReadValue<int>((IntPtr)vars.flagsPointerLevel4) + 0x640;
@@ -171,6 +175,7 @@ init
 		vars.warpStone = new MemoryWatcher<double>((IntPtr)vars.warpStoneAddr);
 		vars.monasteryKey = new MemoryWatcher<double>((IntPtr)vars.monasteryKeyAddr);
 		vars.fennelDefeated = new MemoryWatcher<double>((IntPtr)vars.fennelDefeatedAddr);
+		vars.soldierDefeated = new MemoryWatcher<double>((IntPtr)vars.soldierDefeatedAddr);
 		vars.magnoliaDefeated = new MemoryWatcher<double>((IntPtr)vars.magnoliaDefeatedAddr);
 		vars.freshSpringLeaf = new MemoryWatcher<double>((IntPtr)vars.freshSpringLeafAddr);
 		vars.cloneAngelDefeated = new MemoryWatcher<double>((IntPtr)vars.cloneAngelDefeatedAddr);
@@ -191,6 +196,7 @@ init
 			vars.warpStone,
 			vars.monasteryKey,
 			vars.fennelDefeated,
+			vars.soldierDefeated,
 			vars.magnoliaDefeated,
 			vars.cloneAngelDefeated,
 			vars.choirDefeated,
@@ -397,6 +403,11 @@ split
 	// Fennel - SPLITS AT END OF CUTSCENE, WILL PROBABLY CHANGE LOGIC LATER
 	if (settings["fennel"] && vars.fennelDefeated.Old == 0 && vars.fennelDefeated.Current == 1 && vars.inGame.Old == 1) {
 		print("Fennel defeated!");
+		return true;
+	}
+	// Soldier
+	if (settings["soldier"] && vars.soldierDefeated.Old == 0 && vars.soldierDefeated.Current == 1 && vars.inGame.Old == 1) {
+		print("Soldier defeated!");
 		return true;
 	}
 	// Lupiar & Magnolia - Splits when talking to Magnolia
