@@ -2,6 +2,10 @@
 
 state("MomodoraRUtM", "v1.05b Steam") 
 {
+	// For tracking if we leave to the main menu
+	byte LevelId : 0x230F1A0;
+
+	// For start
 	double DifficultySelector : 0x22C5A7C, 0xCB4, 0xC, 0x4, 0x41B0;
 
 	// Pointer for various flags
@@ -92,7 +96,7 @@ start
 
 reset
 {
-	return (current.InGame == 0 && old.InGame == 1);
+	return (current.LevelId == 1 && old.LevelId != 1);
 }
 
 split
