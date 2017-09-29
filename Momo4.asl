@@ -7,6 +7,10 @@ state("MomodoraRUtM", "v1.05b Steam")
 	// Pointer for various flags
 	int FlagsPtr : 0x2304CE8, 0x4, 0x60, 0x4, 0x4;
 	double InGame : 0x2304CE8, 0x4, 0x780;
+
+	// Various boss flags not covered by FlagsPtr
+	// Note: These actually seem to represent times it takes to beat the boss, but might as well use them as flags
+	double Lubella1 : 0x231138C, 0x8, 0x140, 0x4, 0xCA0;
 }
 
 startup
@@ -104,6 +108,12 @@ split
 			{
 				return settings[key];
 			}
+		}
+
+		// Lubella 1
+		if (current.Lubella1 > 0 && old.Lubella1 == 0)
+		{
+			return settings["lubella1"];
 		}
 	}
 }
