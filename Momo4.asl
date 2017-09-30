@@ -122,6 +122,11 @@ split
 		{
 			if (vars.Flags[key].Old != vars.Flags[key].Current)
 			{
+				if (vars.Splits.Contains(key))
+				{
+					return false;
+				}
+
 				vars.Splits.Add(key);
 				return settings[key];
 			}
@@ -130,6 +135,11 @@ split
 		// Lubella 1
 		if (current.Lubella > 0 && old.Lubella == 0 && current.LevelId == 73)
 		{
+			if (vars.Splits.Contains("lubella1"))
+			{
+				return false;
+			}
+
 			vars.Splits.Add("lubella1");
 			return settings["lubella1"];
 		}
@@ -137,6 +147,11 @@ split
 		// Lubella 2
 		if (current.Lubella > 0 && old.Lubella == 0 && current.LevelId == 147)
 		{
+			if (vars.Splits.Contains("lubella2"))
+			{
+				return false;
+			}
+
 			vars.Splits.Add("lubella2");
 			return settings["lubella2"];
 		}
@@ -144,6 +159,11 @@ split
 		// Frida
 		if (current.Frida == 7 && old.Frida != 7)
 		{
+			if (vars.Splits.Contains("frida"))
+			{
+				return false;
+			}
+
 			vars.Splits.Add("frida");
 			return settings["frida"];
 		}
@@ -151,6 +171,11 @@ split
 		// Queen
 		if (current.CutsceneState == 1000 && old.CutsceneState != 1000 && current.LevelId == 232)
 		{
+			if (vars.Splits.Contains("queen"))
+			{
+				return false;
+			}
+
 			// 100% check if applicable
 			if (settings["100%Check"] && !vars.Is100Run())
 			{
