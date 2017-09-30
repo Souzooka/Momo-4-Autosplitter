@@ -109,7 +109,7 @@ start
 
 reset
 {
-	return (current.LevelId == 1 && old.LevelId != 1);
+	//
 }
 
 split
