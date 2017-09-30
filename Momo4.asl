@@ -1,9 +1,7 @@
-// Bosses die at <= 11 HP
-
 state("MomodoraRUtM", "v1.05b Steam") 
 {
 	// For tracking if we leave to the main menu
-	byte LevelId : 0x230F1A0;
+	short LevelId : 0x230F1A0;
 
 	// For start
 	double DifficultySelector : 0x22C5A7C, 0xCB4, 0xC, 0x4, 0x41B0;
@@ -11,6 +9,7 @@ state("MomodoraRUtM", "v1.05b Steam")
 	// Pointer for various flags
 	int FlagsPtr : 0x230C440, 0x0, 0x4, 0x60, 0x4, 0x4;
 	double InGame : 0x230C440, 0x0, 0x4, 0x780;
+	double CutsceneState: 0x230C440, 0x0, 0x4, 0xAB0;
 
 	// Various boss flags not covered by FlagsPtr
 	// Note: When updating, *actual health values* for these bosses can be found at these paths, except with a last offset of 0x230
@@ -109,7 +108,7 @@ start
 
 reset
 {
-	//
+	return (current.LevelId == 1 && old.LevelId != 1);
 }
 
 split
@@ -150,13 +149,16 @@ split
 		}
 
 		// Queen
-		if (true /* TODO */)
+		if (current.CutsceneState == 1000 && old.CutsceneState != 1000 && current.LevelId == 232)
 		{
 			// 100% check if applicable
 			if (settings["100%Check"] && !vars.Is100Run())
 			{
 				return false;
 			}
+
+			vars.Splits.Add("queen");
+			return settings["queen"];
 		}
 	}
 }
