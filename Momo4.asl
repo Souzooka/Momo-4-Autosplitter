@@ -25,9 +25,7 @@ startup
 	settings.Add("splits", true, "All Splits");
 
 	settings.Add("edea", true, "Edea", "splits");
-	settings.Add("edeasPearl", false, "Edea's Pearl", "splits");
 	settings.Add("lubella1", true, "Lubella 1", "splits");
-	settings.Add("bakmanPatch", false, "Bakman Patch", "splits");
 	settings.Add("gardenKey", false, "Garden Key", "splits");
 	settings.Add("frida", true, "Frida", "splits");
 	settings.Add("fastChargeFragment", false, "Fast Charge Fragment", "splits");
@@ -59,19 +57,16 @@ init
 	// Last offsets of FlagsPtr to read
 	Dictionary<string, int> flagOffsets = new Dictionary<string, int>
 	{
-		{"savesCount",          0x0},
 		{"edea",                0xE0},
-		{"edeasPearl",          0x140},
-		{"bakmanPatch",         0x450},
-		{"arsonist",            0x9E0},
-		{"superChargeFragment", 0x5A0},
+		{"gardenKey",           0x700},
 		{"fastChargeFragment",  0x5B0},
 		{"soldier",             0x4D0},
 		{"warpFragment",        0x5C0},
+		{"arsonist",            0x9E0},
 		{"dashFragment",        0x5D0},
-		{"gardenKey",           0x700},
 		{"monasteryKey",        0x260},
 		{"fennel",              0x3D0},
+		{"superChargeFragment", 0x5A0},
 		{"sealedWind",          0xA90},
 		{"magnolia",            0x660},
 		{"heavyArrows",         0x670},
