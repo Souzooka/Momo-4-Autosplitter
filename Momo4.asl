@@ -75,12 +75,19 @@ init
 		{"choir",               0x6A0},
 		{"ivoryBugs",           0x3C0},
 		{"vitalityFragments",   0xAE0},
-		{"enemiesKilled",       0x490},
 	};
 
 	// Dictionary which holds MemoryWatchers that correspond to each flag
 	vars.Flags = flagOffsets.Keys
 	  .ToDictionary(key => key, key => new MemoryWatcher<double>((IntPtr)current.FlagsPtr + flagOffsets[key]));
+
+	// Function that'll return if 100% conditions are met
+	vars.Is100Run = (Func<bool>)(() =>
+	{
+		return vars.Flags["choir"].Current && 
+			   vars.Flags["vitalityFragments"].Current == 17 && 
+			   vars.Flags["bugIvories"].Current == 20;
+	});
 }
 
 update
@@ -140,6 +147,16 @@ split
 		{
 			vars.Splits.Add("frida");
 			return settings["frida"];
+		}
+
+		// Queen
+		if (true /* TODO */)
+		{
+			// 100% check if applicable
+			if (settings["100%Check"] && !vars.Is100Run())
+			{
+				return false;
+			}
 		}
 	}
 }
