@@ -13,7 +13,7 @@ state("MomodoraRUtM", "v1.05b Steam")
 	double InGame : 0x2304CE8, 0x4, 0x780;
 
 	// Various boss flags not covered by FlagsPtr
-	// Note: These actually seem to represent times it takes to beat the boss, but might as well use them as flags
+	// Note: These actually seem to represent times it takes to beat the boss in ms, but might as well use them as flags
 	double Lubella1 : 0x231138C, 0x8, 0x140, 0x4, 0xCA0;
 }
 
@@ -51,6 +51,10 @@ startup
 
 init
 {
+	// HashSet to hold splits already hit
+	// In case of dying after triggering a split, triggering it again can cause a false double split without this
+	vars.Splits = new HashSet<string>();
+
 	// Last offsets of FlagsPtr to read
 	Dictionary<string, int> flagOffsets = new Dictionary<string, int>
 	{
@@ -85,6 +89,12 @@ init
 
 update
 {
+	// Clear any hit splits if timer stops
+	if (timer.CurrentPhase == TimerPhase.NotRunning)
+	{
+		vars.Splits.Clear();
+	}
+
 	// Update all MemoryWatchers in vars.Flags
 	new List<MemoryWatcher<double>>(vars.Flags.Values).ForEach((Action<MemoryWatcher<double>>)(mw => mw.Update(game)));
 }
@@ -110,6 +120,7 @@ split
 		{
 			if (vars.Flags[key].Old != vars.Flags[key].Current)
 			{
+				vars.Splits.Add(key);
 				return settings[key];
 			}
 		}
@@ -117,6 +128,7 @@ split
 		// Lubella 1
 		if (current.Lubella1 > 0 && old.Lubella1 == 0)
 		{
+			vars.Splits.Add("lubella1");
 			return settings["lubella1"];
 		}
 	}
