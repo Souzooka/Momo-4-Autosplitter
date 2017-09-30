@@ -9,8 +9,8 @@ state("MomodoraRUtM", "v1.05b Steam")
 	double DifficultySelector : 0x22C5A7C, 0xCB4, 0xC, 0x4, 0x41B0;
 
 	// Pointer for various flags
-	int FlagsPtr : 0x2304CE8, 0x4, 0x60, 0x4, 0x4;
-	double InGame : 0x2304CE8, 0x4, 0x780;
+	int FlagsPtr : 0x230C440, 0x0, 0x4, 0x60, 0x4, 0x4;
+	double InGame : 0x230C440, 0x0, 0x4, 0x780;
 
 	// Various boss flags not covered by FlagsPtr
 	// Note: These actually seem to represent times it takes to beat the boss in ms, but might as well use them as flags
