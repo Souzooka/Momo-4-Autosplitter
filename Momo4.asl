@@ -13,8 +13,9 @@ state("MomodoraRUtM", "v1.05b Steam")
 	double InGame : 0x230C440, 0x0, 0x4, 0x780;
 
 	// Various boss flags not covered by FlagsPtr
-	// Note: These actually seem to represent times it takes to beat the boss in ms, but might as well use them as flags
+	// Note: When updating, *actual health values* for these bosses can be found at these paths, except with a last offset of 0x230
 	double Lubella1 : 0x231138C, 0x8, 0x140, 0x4, 0xCA0;
+	double Frida : 0x231138C, 0x34, 0x13C, 0x4, 0x1210;
 }
 
 startup
@@ -130,6 +131,13 @@ split
 		{
 			vars.Splits.Add("lubella1");
 			return settings["lubella1"];
+		}
+
+		// Frida
+		if (current.Frida == 7 && old.Frida != 7)
+		{
+			vars.Splits.Add("frida");
+			return settings["frida"];
 		}
 	}
 }
