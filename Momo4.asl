@@ -161,7 +161,7 @@ split
 			vars.Splits.Add("lubella2");
 			return settings["lubella2"];
 		}
-
+    
 		// Frida
 		if (current.Frida == 7 && old.Frida != 7)
 		{
