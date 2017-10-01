@@ -77,8 +77,12 @@ init
 	};
 
 	// Dictionary which holds MemoryWatchers that correspond to each flag
-	vars.Flags = flagOffsets.Keys
-	  .ToDictionary(key => key, key => new MemoryWatcher<double>((IntPtr)current.FlagsPtr + flagOffsets[key]));
+	vars.InitFlags = (Func<Dictionary<string,MemoryWatcher<double>>>)(() => 
+	{
+		return flagOffsets.Keys
+	  		.ToDictionary(key => key, key => new MemoryWatcher<double>((IntPtr)current.FlagsPtr + flagOffsets[key]));
+	});
+	vars.Flags = new Dictionary<string, MemoryWatcher<double>>();
 
 	// Function that'll return if 100% conditions are met
 	vars.Is100Run = (Func<bool>)(() =>
@@ -95,6 +99,12 @@ update
 	if (timer.CurrentPhase == TimerPhase.NotRunning)
 	{
 		vars.Splits.Clear();
+	}
+
+	// Initialize flags when we find the flag pointer
+	if (old.FlagsPtr == 0 && current.FlagsPtr != 0)
+	{
+		vars.Flags = vars.InitFlags();
 	}
 
 	// Update all MemoryWatchers in vars.Flags
