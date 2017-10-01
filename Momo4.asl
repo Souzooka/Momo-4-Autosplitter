@@ -55,35 +55,7 @@ init
 	// In case of dying after triggering a split, triggering it again can cause a false double split without this
 	vars.Splits = new HashSet<string>();
 
-	// Last offsets of FlagsPtr to read
-	Dictionary<string, int> flagOffsets = new Dictionary<string, int>
-	{
-		{"edea",                0xE0},
-		{"gardenKey",           0x700},
-		{"fastChargeFragment",  0x5B0},
-		{"soldier",             0x4D0},
-		{"warpFragment",        0x5C0},
-		{"arsonist",            0x9E0},
-		{"dashFragment",        0x5D0},
-		{"monasteryKey",        0x260},
-		{"fennel",              0x3D0},
-		{"superChargeFragment", 0x5A0},
-		{"sealedWind",          0xA90},
-		{"magnolia",            0x660},
-		{"heavyArrows",         0x670},
-		{"freshSpringLeaf",     0x600},
-		{"cloneAngel",          0x640},
-		{"choir",               0x6A0},
-		{"ivoryBugs",           0x3C0},
-		{"vitalityFragments",   0xAE0},
-	};
-
 	// Dictionary which holds MemoryWatchers that correspond to each flag
-	vars.InitFlags = (Func<Dictionary<string,MemoryWatcher<double>>>)(() => 
-	{
-		return flagOffsets.Keys
-	  		.ToDictionary(key => key, key => new MemoryWatcher<double>((IntPtr)current.FlagsPtr + flagOffsets[key]));
-	});
 	vars.Flags = new Dictionary<string, MemoryWatcher<double>>();
 
 	// Function that'll return if 100% conditions are met
@@ -104,9 +76,33 @@ update
 	}
 
 	// Initialize flags when we find the flag pointer
-	if (old.FlagsPtr == 0 && current.FlagsPtr != 0)
+	if (old.FlagsPtr != current.FlagsPtr)
 	{
-		vars.Flags = vars.InitFlags();
+		// Last offsets of FlagsPtr to read
+		Dictionary<string, int> flagOffsets = new Dictionary<string, int>
+		{
+			{"edea",                0xE0},
+			{"gardenKey",           0x700},
+			{"fastChargeFragment",  0x5B0},
+			{"soldier",             0x4D0},
+			{"warpFragment",        0x5C0},
+			{"arsonist",            0x9E0},
+			{"dashFragment",        0x5D0},
+			{"monasteryKey",        0x260},
+			{"fennel",              0x3D0},
+			{"superChargeFragment", 0x5A0},
+			{"sealedWind",          0xA90},
+			{"magnolia",            0x660},
+			{"heavyArrows",         0x670},
+			{"freshSpringLeaf",     0x600},
+			{"cloneAngel",          0x640},
+			{"choir",               0x6A0},
+			{"ivoryBugs",           0x3C0},
+			{"vitalityFragments",   0xAE0},
+		};
+		
+		vars.Flags = flagOffsets.Keys
+	  							.ToDictionary(key => key, key => new MemoryWatcher<double>((IntPtr)current.FlagsPtr + flagOffsets[key]));
 	}
 
 	// Update all MemoryWatchers in vars.Flags
