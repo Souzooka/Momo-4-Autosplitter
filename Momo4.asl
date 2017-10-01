@@ -73,8 +73,8 @@ update
 		vars.Splits.Clear();
 	}
 
-	// Initialize flags when we find the flag pointer
-	if (old.FlagsPtr != current.FlagsPtr)
+	// Initialize flags when the flags pointer gets initialized/changes, or we load up LiveSplit while in-game
+	if (old.FlagsPtr != current.FlagsPtr || current.FlagsPtr != 0 && vars.Flags.Count == 0)
 	{
 		// Last offsets of FlagsPtr to read
 		Dictionary<string, int> flagOffsets = new Dictionary<string, int>
