@@ -13,6 +13,8 @@ state("MomodoraRUtM", "v1.05b Steam")
 
 	// Various boss flags not covered by FlagsPtr
 	// Note: When updating, *actual health values* for these bosses can be found at these paths, except with a last offset of 0x230
+	int LubellaPtr : 0x231138C, 0x8, 0x140, 0x4;
+	double LubellaHP : 0x231138C, 0x8, 0x140, 0x4, 0x230;
 	double Lubella : 0x231138C, 0x8, 0x140, 0x4, 0xCA0;
 	double Frida : 0x231138C, 0x34, 0x13C, 0x4, 0x1210;
 }
@@ -155,7 +157,8 @@ split
 		}
 
 		// Lubella 2
-		if (current.Lubella > 0 && old.Lubella == 0 && current.LevelId == 147)
+		if (old.LubellaHP > 11 && current.LubellaHP <= 11 && 
+			current.LubellaPtr == old.LubellaPtr && current.LevelId == 147)
 		{
 			if (vars.Splits.Contains("lubella2"))
 			{
