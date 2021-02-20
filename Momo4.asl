@@ -17,6 +17,26 @@ state("MomodoraRUtM", "v1.05b Steam")
 	//double Frida : 0x231138C, 0x34, 0x13C, 0x4, 0x1210;
 }
 
+state("MomodoraRUtM", "v1.06") 
+{
+	// For tracking if we leave to the main menu
+	short LevelId : 0x2317448;
+
+	// For start
+	double DifficultySelector : 0x22CDD94, 0xCB4, 0xC, 0x4, 0x41F0;
+
+	// Pointer for various flags
+	int FlagsPtr : 0x23146E8, 0x0, 0x4, 0x60, 0x4, 0x4;
+	double InGame : 0x23146E8, 0x0, 0x4, 0x7B0;
+	double CutsceneState: 0x23146E8, 0x0, 0x4, 0xAD0;
+
+	///UNTIL HERE
+
+	// Various boss flags not covered by FlagsPtr
+	// Note: When updating, *actual health values* for these bosses can be found at these paths, except with a last offset of 0x230
+	double Lubella : 0x2319634, 0x8, 0x140, 0x4, 0xCA0;
+}
+
 startup
 {
 	// SETTINGS START //
@@ -49,6 +69,23 @@ startup
 
 init
 {
+
+	//Depending on the executable size its possible to determine the version of the game the player is running
+	//In case of needing to get the module size of future versions use this with the DebugView when oppening the game
+	//print("Module Size: " + modules.First().ModuleMemorySize.ToString());
+
+	if(modules.First().ModuleMemorySize == 39809024){
+		version = "v1.06";
+	}
+
+	else if(modules.First().ModuleMemorySize == 39690240){
+		version = "v1.05b Steam";
+	}
+	
+	else{
+		print("Version not recognized");
+	}
+	
 	// HashSet to hold splits already hit
 	// In case of dying after triggering a split, triggering it again can cause a false double split without this
 	vars.Splits = new HashSet<string>();
@@ -109,7 +146,9 @@ update
 
 start
 {
-	return (old.DifficultySelector > 0 && current.DifficultySelector == 0);
+	return ((old.DifficultySelector > 0 && current.DifficultySelector == 0) || 
+	(current.LevelId == 21 && old.LevelId == 1) || 
+	(current.LevelId == 21 && old.CutsceneState == 0));
 }
 
 reset
